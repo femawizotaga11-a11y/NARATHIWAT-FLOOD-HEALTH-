@@ -57,6 +57,8 @@ import {
   fetchSectionFromSheet,
   fetchFromGoogleSheet,
   pushToGoogleSheet,
+  pushAllSections4To11ToSheet,
+  createFullDatabaseInSheet,
 } from './services/apiService';
 
 import {
@@ -389,6 +391,71 @@ export default function App() {
       showToast(res.message);
     } catch (err) {
       showToast('เกิดข้อผิดพลาดในการส่งข้อมูล: ' + String(err));
+    } finally {
+      setIsSyncingSheet(false);
+    }
+  };
+
+  // Requirement 1: นำข้อมูลในเมนู บันทึกใน sheet ตั้งแต่ ข้อ 4-11
+  const handleBulkPush4To11 = async () => {
+    setIsSyncingSheet(true);
+    try {
+      const res = await pushAllSections4To11ToSheet(
+        {
+          patients,
+          referrals: referralRoutes,
+          bcp: bcpItems,
+          staff: staffTeams,
+          hospitals,
+          shph: shphList,
+          communications: communicationLayers,
+          replenishments: replenishmentPlans,
+        },
+        sheetConfig.gasWebAppUrl
+      );
+      const updatedConfig: SheetConfigState = {
+        ...sheetConfig,
+        lastSyncTime: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.',
+        status: res.success ? 'success' : 'error',
+      };
+      handleSaveSheetConfig(updatedConfig);
+      showToast(res.message);
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูลข้อ 4-11: ' + String(err));
+    } finally {
+      setIsSyncingSheet(false);
+    }
+  };
+
+  // Requirement 2: รองรับสร้างฐานข้อมูลใหม่ทั้งหมด โดยยึดเนื้อหาข้อมูล โครงสร้างตามหัวข้อ 1-11
+  const handleCreateFullDb1To11 = async () => {
+    setIsSyncingSheet(true);
+    try {
+      const res = await createFullDatabaseInSheet(
+        {
+          waterStations,
+          districts,
+          roadCuts,
+          patients,
+          referrals: referralRoutes,
+          bcp: bcpItems,
+          staff: staffTeams,
+          hospitals,
+          shph: shphList,
+          communications: communicationLayers,
+          replenishments: replenishmentPlans,
+        },
+        sheetConfig.gasWebAppUrl
+      );
+      const updatedConfig: SheetConfigState = {
+        ...sheetConfig,
+        lastSyncTime: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.',
+        status: res.success ? 'success' : 'error',
+      };
+      handleSaveSheetConfig(updatedConfig);
+      showToast(res.message);
+    } catch (err) {
+      showToast('เกิดข้อผิดพลาดในการสร้างฐานข้อมูลใหม่ 1-11: ' + String(err));
     } finally {
       setIsSyncingSheet(false);
     }
