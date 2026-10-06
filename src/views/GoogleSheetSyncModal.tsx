@@ -88,8 +88,6 @@ export const GoogleSheetSyncModal: React.FC<Props> = ({
   onPushToSheet,
   isSyncing,
 }) => {
-  if (!isOpen) return null;
-
   const [sheetIdInput, setSheetIdInput] = useState(config?.sheetId || DEFAULT_SHEET_ID);
   const [gasUrlInput, setGasUrlInput] = useState(config?.gasWebAppUrl || '');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
@@ -117,8 +115,6 @@ export const GoogleSheetSyncModal: React.FC<Props> = ({
       setGasUrlInput(config?.gasWebAppUrl || '');
     }
   }, [isOpen, config]);
-
-  if (!isOpen) return null;
 
   const handleRunTest = async () => {
     setIsTesting(true);
@@ -197,6 +193,10 @@ export const GoogleSheetSyncModal: React.FC<Props> = ({
     shph.length +
     communications.length +
     replenishments.length;
+
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div
