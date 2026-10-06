@@ -2,5 +2,7 @@
   "name": "EOC Narathiwat Flood Emergency Health Command Center",
   "description": "ระบบศูนย์ปฏิบัติการภาวะฉุกเฉินทางสาธารณสุข (EOC) สสจ.นราธิวาส เฝ้าระวังอุทกภัย BCP ทรัพยากร 13 รพ. 111 รพ.สต. ทะเบียนผู้ป่วยเปราะบาง และเส้นทางสำรอง",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
