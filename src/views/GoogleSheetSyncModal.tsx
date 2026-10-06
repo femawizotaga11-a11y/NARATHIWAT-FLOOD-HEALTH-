@@ -71,25 +71,27 @@ export const GoogleSheetSyncModal: React.FC<Props> = ({
   onClose,
   config,
   onSaveConfig,
-  patients,
-  referrals,
-  bcp,
-  staff,
-  hospitals,
-  shph,
-  communications,
-  replenishments,
-  waterStations,
-  districts,
-  roadCuts,
+  patients = [],
+  referrals = [],
+  bcp = [],
+  staff = [],
+  hospitals = [],
+  shph = [],
+  communications = [],
+  replenishments = [],
+  waterStations = [],
+  districts = [],
+  roadCuts = [],
   onBulkPush4To11,
   onCreateFullDb1To11,
   onPullFromSheet,
   onPushToSheet,
   isSyncing,
 }) => {
-  const [sheetIdInput, setSheetIdInput] = useState(config.sheetId || DEFAULT_SHEET_ID);
-  const [gasUrlInput, setGasUrlInput] = useState(config.gasWebAppUrl);
+  if (!isOpen) return null;
+
+  const [sheetIdInput, setSheetIdInput] = useState(config?.sheetId || DEFAULT_SHEET_ID);
+  const [gasUrlInput, setGasUrlInput] = useState(config?.gasWebAppUrl || '');
   const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -111,8 +113,8 @@ export const GoogleSheetSyncModal: React.FC<Props> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setSheetIdInput(config.sheetId || DEFAULT_SHEET_ID);
-      setGasUrlInput(config.gasWebAppUrl);
+      setSheetIdInput(config?.sheetId || DEFAULT_SHEET_ID);
+      setGasUrlInput(config?.gasWebAppUrl || '');
     }
   }, [isOpen, config]);
 
@@ -197,8 +199,13 @@ export const GoogleSheetSyncModal: React.FC<Props> = ({
     replenishments.length;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-slate-900 border border-sky-600/50 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-slate-900 border border-sky-600/50 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 relative my-auto">
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-slate-800 bg-slate-950/80 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3">

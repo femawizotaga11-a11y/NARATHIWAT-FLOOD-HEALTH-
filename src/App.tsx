@@ -673,7 +673,19 @@ export default function App() {
         onClose={() => setIsSheetModalOpen(false)}
         config={sheetConfig}
         onSaveConfig={handleSaveSheetConfig}
-        patients={patients}
+        patients={patients || []}
+        referrals={referralRoutes || []}
+        bcp={bcpItems || []}
+        staff={staffTeams || []}
+        hospitals={hospitals || []}
+        shph={shphList || []}
+        communications={communicationLayers || []}
+        replenishments={replenishmentPlans || []}
+        waterStations={waterStations || []}
+        districts={districts || []}
+        roadCuts={roadCuts || []}
+        onBulkPush4To11={handleBulkPush4To11}
+        onCreateFullDb1To11={handleCreateFullDb1To11}
         onPullFromSheet={handleGlobalPullFromSheet}
         onPushToSheet={handleGlobalPushToSheet}
         isSyncing={isSyncingSheet}
