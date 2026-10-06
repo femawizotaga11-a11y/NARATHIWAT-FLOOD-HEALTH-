@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HospitalStatus } from '../types/dashboard';
+import { HospitalStatus, RiskLevel, ServiceStatus } from '../types/dashboard';
 import {
   Building2,
   AlertTriangle,
@@ -12,18 +12,71 @@ import {
   Bed,
   CheckCircle2,
   XCircle,
-  AlertCircle,
-  Filter,
+  Plus,
+  Edit,
+  Trash2,
+  Upload,
+  Download,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 interface Props {
   hospitals: HospitalStatus[];
+  onAddHospital: (hosp: HospitalStatus) => void;
+  onUpdateHospital: (hosp: HospitalStatus) => void;
+  onDeleteHospital: (id: string) => void;
+  onSyncWithSheet: () => void;
+  onPullFromSheet: () => void;
+  isSyncing: boolean;
 }
 
-export const HospitalStatusView: React.FC<Props> = ({ hospitals }) => {
+export const HospitalStatusView: React.FC<Props> = ({
+  hospitals,
+  onAddHospital,
+  onUpdateHospital,
+  onDeleteHospital,
+  onSyncWithSheet,
+  onPullFromSheet,
+  isSyncing,
+}) => {
   const [filterType, setFilterType] = useState<string>('all');
   const [filterRisk, setFilterRisk] = useState<string>('all');
   const [selectedHospital, setSelectedHospital] = useState<HospitalStatus | null>(hospitals[0] || null);
+
+  // Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingHosp, setEditingHosp] = useState<HospitalStatus | null>(null);
+
+  const [formData, setFormData] = useState<Partial<HospitalStatus>>({
+    name: '',
+    type: 'M',
+    district: 'เมืองนราธิวาส',
+    riskLevel: 'warning',
+    er: 'active',
+    lr: 'active',
+    or: 'active',
+    icu: 'active',
+    dialysis: 'active',
+    opdNcd: 'active',
+    autonomyHours: 72,
+    fuelGeneratorHours: 72,
+    oxygenHours: 72,
+    waterHours: 72,
+    bloodUnits: 20,
+    bloodStatus: 'เพียงพอ',
+    doctorCount: 8,
+    nurseCount: 40,
+    emtCount: 6,
+    staffReadinessPct: 85,
+    dialysisPatientsCount: 6,
+    homeOxygenPatientsCount: 6,
+    bedTotal: 60,
+    bedOccupied: 40,
+    lat: 6.42,
+    lng: 101.82,
+    bcpActive: false,
+    notes: '',
+  });
 
   const filtered = hospitals.filter((h) => {
     if (filterType !== 'all' && h.type !== filterType) return false;
@@ -33,6 +86,66 @@ export const HospitalStatusView: React.FC<Props> = ({ hospitals }) => {
 
   const criticalRtoHospitals = hospitals.filter((h) => h.autonomyHours <= 24);
   const warningRtoHospitals = hospitals.filter((h) => h.autonomyHours > 24 && h.autonomyHours <= 36);
+
+  const handleOpenAdd = () => {
+    setEditingHosp(null);
+    setFormData({
+      name: '',
+      type: 'M',
+      district: 'เมืองนราธิวาส',
+      riskLevel: 'warning',
+      er: 'active',
+      lr: 'active',
+      or: 'active',
+      icu: 'active',
+      dialysis: 'active',
+      opdNcd: 'active',
+      autonomyHours: 72,
+      fuelGeneratorHours: 72,
+      oxygenHours: 72,
+      waterHours: 72,
+      bloodUnits: 20,
+      bloodStatus: 'เพียงพอ',
+      doctorCount: 8,
+      nurseCount: 40,
+      emtCount: 6,
+      staffReadinessPct: 85,
+      dialysisPatientsCount: 6,
+      homeOxygenPatientsCount: 6,
+      bedTotal: 60,
+      bedOccupied: 40,
+      lat: 6.42,
+      lng: 101.82,
+      bcpActive: false,
+      notes: '',
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (hosp: HospitalStatus) => {
+    setEditingHosp(hosp);
+    setFormData({ ...hosp });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name) return;
+
+    if (editingHosp) {
+      onUpdateHospital({
+        ...editingHosp,
+        ...(formData as HospitalStatus),
+      });
+    } else {
+      const newHosp: HospitalStatus = {
+        ...(formData as HospitalStatus),
+        id: `h-${Date.now()}`,
+      };
+      onAddHospital(newHosp);
+    }
+    setIsModalOpen(false);
+  };
 
   const renderStatusBadge = (status: 'active' | 'partial' | 'closed') => {
     if (status === 'active') {
@@ -61,31 +174,52 @@ export const HospitalStatusView: React.FC<Props> = ({ hospitals }) => {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
+      {/* Header with CRUD & Sheet Controls */}
       <div className="bg-slate-900/90 border border-sky-800/40 rounded-xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded bg-amber-950 border border-amber-500/40 text-amber-300 font-mono text-xs font-bold">
-              ข้อ 3 & ข้อ 4
+              ข้อ 8 | ขีดความสามารถสถานพยาบาล
             </span>
-            <h2 className="text-base font-bold text-white">
-              ทรัพยากรรายโรงพยาบาลและระยะเวลาความอยู่รอด (RTO / Autonomy Hours)
+            <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-bold">
+              CRUD Sheet 100%
+            </span>
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <span>สถานะและทรัพยากร 13 โรงพยาบาล & RTO (CRUD ลง Sheet)</span>
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            ติดตามขีดความสามารถการบริการ ER, LR, OR, ICU, Dialysis, OPD และประเมิน RTO (Recovery Time Objective) 13 โรงพยาบาล
+            เชื่อมต่อข้อมูลชีตแท็บ: <code className="text-cyan-300 font-mono">HospitalStatus</code> (Google Sheet ID: 13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY)
           </p>
         </div>
 
-        {/* Warning Badges */}
-        <div className="flex items-center gap-2 text-xs">
-          <div className="bg-rose-950/80 border border-rose-500/60 px-3 py-1.5 rounded-lg text-rose-300 font-semibold flex items-center gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-            <span>RTO วิกฤต (≤24 ชม.): {criticalRtoHospitals.length} รพ.</span>
-          </div>
-          <div className="bg-amber-950/80 border border-amber-500/60 px-3 py-1.5 rounded-lg text-amber-300 font-semibold">
-            RTO เฝ้าระวัง (36 ชม.): {warningRtoHospitals.length} รพ.
-          </div>
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleOpenAdd}
+            className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow transition flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>เพิ่มโรงพยาบาล</span>
+          </button>
+
+          <button
+            onClick={onSyncWithSheet}
+            disabled={isSyncing}
+            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow transition flex items-center gap-1.5"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>{isSyncing ? 'กำลังซิงค์...' : 'บันทึกลง Sheet (Push)'}</span>
+          </button>
+
+          <button
+            onClick={onPullFromSheet}
+            disabled={isSyncing}
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition flex items-center gap-1.5"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>ดึงจาก Sheet (Pull)</span>
+          </button>
         </div>
       </div>
 
@@ -116,7 +250,7 @@ export const HospitalStatusView: React.FC<Props> = ({ hospitals }) => {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
             <Building2 className="w-4 h-4 text-cyan-400" />
-            <span>ตารางขีดความสามารถและทรัพยากร 13 โรงพยาบาล (ภาพจำลองแผนภูมิ Infographic ข้อ 5)</span>
+            <span>ตารางขีดความสามารถและทรัพยากรโรงพยาบาล (แสดงผลและ CRUD ข้อมูลจริงจาก Google Sheet)</span>
           </h3>
 
           {/* Filters */}
@@ -170,7 +304,7 @@ export const HospitalStatusView: React.FC<Props> = ({ hospitals }) => {
                 <th className="py-2.5 px-2">ออกซิเจน</th>
                 <th className="py-2.5 px-2">เลือดสำรอง</th>
                 <th className="py-2.5 px-2">กำลังคน</th>
-                <th className="py-2.5 px-2 text-right">รายละเอียด</th>
+                <th className="py-2.5 px-2 text-right">จัดการ (CRUD)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-slate-200">
@@ -237,16 +371,33 @@ export const HospitalStatusView: React.FC<Props> = ({ hospitals }) => {
                           h.bloodStatus === 'เสี่ยงขาด' ? 'text-rose-400' : 'text-emerald-400'
                         }`}
                       >
-                        {h.bloodUnits} u ({h.bloodStatus})
+                        {h.bloodUnits} u
                       </span>
                     </td>
                     <td className="py-2.5 px-2 font-mono text-[11px] text-slate-300">
                       {h.staffReadinessPct}%
                     </td>
                     <td className="py-2.5 px-2 text-right">
-                      <button className="text-cyan-400 hover:text-white px-2 py-0.5 rounded bg-slate-800 text-[10px]">
-                        เปิดดู
-                      </button>
+                      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleOpenEdit(h)}
+                          title="แก้ไขข้อมูลโรงพยาบาล"
+                          className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 transition"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`ยืนยันการลบ ${h.name} หรือไม่?`)) {
+                              onDeleteHospital(h.id);
+                            }
+                          }}
+                          title="ลบโรงพยาบาล"
+                          className="p-1 rounded bg-slate-800 hover:bg-red-950 text-slate-400 hover:text-red-300 transition"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -256,100 +407,158 @@ export const HospitalStatusView: React.FC<Props> = ({ hospitals }) => {
         </div>
       </div>
 
-      {/* Selected Hospital Detailed Profile Card */}
-      {selectedHospital && (
-        <div className="bg-slate-900/90 border border-sky-800/40 rounded-xl p-4 shadow-xl">
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white">{selectedHospital.name}</h3>
-                <span className="px-2 py-0.5 rounded bg-sky-950 border border-sky-700/60 text-sky-200 text-xs font-mono font-bold">
-                  ระดับ {selectedHospital.type}
-                </span>
-                <span className="text-xs text-slate-400">อ.{selectedHospital.district}</span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {selectedHospital.notes || 'ความพร้อมของสถานพยาบาลในการรองรับแผนเผชิญเหตุอุทกภัย'}
-              </p>
+      {/* Hospital Create/Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-slate-900 border border-sky-700/60 rounded-xl p-5 w-full max-w-2xl shadow-2xl my-8 text-xs text-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-cyan-400" />
+                <span>{editingHosp ? 'แก้ไขข้อมูลโรงพยาบาล' : 'เพิ่มโรงพยาบาลใหม่'}</span>
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <div className="text-[10px] text-slate-400">Safe Operating Time (RTO)</div>
-                <div
-                  className={`text-lg font-bold font-mono ${
-                    selectedHospital.autonomyHours <= 24 ? 'text-rose-400' : 'text-emerald-400'
-                  }`}
-                >
-                  {selectedHospital.autonomyHours} ชั่วโมง
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 mb-1">ชื่อโรงพยาบาล *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs"
+                    placeholder="เช่น รพ.นราธิวาสราชนครินทร์"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">ระดับโรงพยาบาล</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs"
+                  >
+                    <option value="A+">A+ (โรงพยาบาลศูนย์/ทั่วไปขนาดใหญ่)</option>
+                    <option value="S+">S+ (โรงพยาบาลชุมชนแม่ข่าย)</option>
+                    <option value="M">M (โรงพยาบาลชุมชนขนาดกลาง)</option>
+                    <option value="S">S (โรงพยาบาลชุมชนขนาดเล็ก)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">อำเภอ</label>
+                  <input
+                    type="text"
+                    value={formData.district}
+                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">ระดับความเสี่ยง</label>
+                  <select
+                    value={formData.riskLevel}
+                    onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value as RiskLevel })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs"
+                  >
+                    <option value="critical">สีแดง (วิกฤต)</option>
+                    <option value="high">สีส้ม (เสี่ยงสูง)</option>
+                    <option value="warning">สีเหลือง (เฝ้าระวัง)</option>
+                    <option value="normal">สีเขียว (ปกติ)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Safe Operating Time (RTO ชม.)</label>
+                  <input
+                    type="number"
+                    value={formData.autonomyHours}
+                    onChange={(e) => setFormData({ ...formData, autonomyHours: Number(e.target.value) })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">ไฟฟ้าสำรอง Generator (ชม.)</label>
+                  <input
+                    type="number"
+                    value={formData.fuelGeneratorHours}
+                    onChange={(e) => setFormData({ ...formData, fuelGeneratorHours: Number(e.target.value) })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">ออกซิเจนสำรอง (ชม.)</label>
+                  <input
+                    type="number"
+                    value={formData.oxygenHours}
+                    onChange={(e) => setFormData({ ...formData, oxygenHours: Number(e.target.value) })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">เลือดสำรอง (ยูนิต)</label>
+                  <input
+                    type="number"
+                    value={formData.bloodUnits}
+                    onChange={(e) => setFormData({ ...formData, bloodUnits: Number(e.target.value) })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs font-mono"
+                  />
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 mt-4 text-xs">
-            <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-slate-400 text-[10px] flex items-center gap-1 mb-1">
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>ไฟฟ้าสำรอง (Gen)</span>
+              {/* Department statuses */}
+              <div>
+                <label className="block text-slate-400 mb-1.5 font-semibold">สถานะแผนกหลัก (ER, LR, OR, ICU, Dialysis, OPD)</label>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {(['er', 'lr', 'or', 'icu', 'dialysis', 'opdNcd'] as const).map((dept) => (
+                    <div key={dept}>
+                      <span className="block text-[10px] uppercase text-slate-400 mb-0.5">{dept}</span>
+                      <select
+                        value={formData[dept]}
+                        onChange={(e) => setFormData({ ...formData, [dept]: e.target.value as ServiceStatus })}
+                        className="w-full bg-slate-950 border border-slate-700 rounded p-1 text-white text-[11px]"
+                      >
+                        <option value="active">เปิดปกติ</option>
+                        <option value="partial">จำกัด</option>
+                        <option value="closed">ปิด</option>
+                      </select>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="text-base font-bold text-white font-mono">
-                {selectedHospital.fuelGeneratorHours} ชม.
-              </div>
-            </div>
 
-            <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-slate-400 text-[10px] flex items-center gap-1 mb-1">
-                <Wind className="w-3.5 h-3.5 text-cyan-400" />
-                <span>ออกซิเจนทางการแพทย์</span>
+              <div>
+                <label className="block text-slate-400 mb-1">บันทึกเหตุการณ์ฉุกเฉิน / หมายเหตุ</label>
+                <textarea
+                  rows={2}
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs"
+                />
               </div>
-              <div className="text-base font-bold text-white font-mono">
-                {selectedHospital.oxygenHours} ชม.
-              </div>
-            </div>
 
-            <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-slate-400 text-[10px] flex items-center gap-1 mb-1">
-                <Droplet className="w-3.5 h-3.5 text-blue-400" />
-                <span>น้ำใช้สำรอง</span>
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded bg-slate-800 text-slate-300 text-xs"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow"
+                >
+                  {editingHosp ? 'บันทึกการแก้ไข' : 'บันทึกโรงพยาบาล'}
+                </button>
               </div>
-              <div className="text-base font-bold text-white font-mono">
-                {selectedHospital.waterHours} ชม.
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-slate-400 text-[10px] flex items-center gap-1 mb-1">
-                <HeartPulse className="w-3.5 h-3.5 text-rose-400" />
-                <span>คลังโลหิต</span>
-              </div>
-              <div className="text-base font-bold text-white font-mono">
-                {selectedHospital.bloodUnits} <span className="text-xs font-normal">ยูนิต</span>
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-slate-400 text-[10px] flex items-center gap-1 mb-1">
-                <Users className="w-3.5 h-3.5 text-purple-400" />
-                <span>แพทย์ / พยาบาล</span>
-              </div>
-              <div className="text-base font-bold text-white font-mono">
-                {selectedHospital.doctorCount} / {selectedHospital.nurseCount} คน
-              </div>
-            </div>
-
-            <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="text-slate-400 text-[10px] flex items-center gap-1 mb-1">
-                <Bed className="w-3.5 h-3.5 text-emerald-400" />
-                <span>อัตราครองเตียง</span>
-              </div>
-              <div className="text-base font-bold text-white font-mono">
-                {selectedHospital.bedOccupied} / {selectedHospital.bedTotal}{' '}
-                <span className="text-xs font-normal text-slate-400">
-                  ({Math.round((selectedHospital.bedOccupied / selectedHospital.bedTotal) * 100)}%)
-                </span>
-              </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

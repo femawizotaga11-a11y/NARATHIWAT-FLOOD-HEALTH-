@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { BcpResourceItem } from '../types/dashboard';
 import {
   Zap,
   Wind,
@@ -10,169 +11,191 @@ import {
   Users2,
   Package,
   ShieldCheck,
-  AlertTriangle,
-  CheckCircle2,
+  Plus,
+  Edit,
+  Trash2,
+  Upload,
+  Download,
 } from 'lucide-react';
 
-export const BcpResourcesView: React.FC = () => {
-  const bcpItems = [
-    {
-      id: 'bcp-1',
-      title: 'ไฟฟ้าสำรอง / Generator',
+interface Props {
+  bcpItems: BcpResourceItem[];
+  onAddBcpItem: (item: BcpResourceItem) => void;
+  onUpdateBcpItem: (item: BcpResourceItem) => void;
+  onDeleteBcpItem: (id: string) => void;
+  onSyncWithSheet: () => void;
+  onPullFromSheet: () => void;
+  isSyncing: boolean;
+}
+
+export const BcpResourcesView: React.FC<Props> = ({
+  bcpItems,
+  onAddBcpItem,
+  onUpdateBcpItem,
+  onDeleteBcpItem,
+  onSyncWithSheet,
+  onPullFromSheet,
+  isSyncing,
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<BcpResourceItem | null>(null);
+
+  const [formData, setFormData] = useState<Partial<BcpResourceItem>>({
+    title: '',
+    duration: 'คงอยู่ได้ 72 ชม.',
+    status: 'พร้อม',
+    statusType: 'success',
+    detail: '',
+    contingencyPlan: '',
+  });
+
+  const handleOpenAdd = () => {
+    setEditingItem(null);
+    setFormData({
+      title: '',
       duration: 'คงอยู่ได้ 72 ชม.',
       status: 'พร้อม',
       statusType: 'success',
-      icon: Zap,
-      detail: 'เครื่องกำเนิดไฟฟ้าดีเซล 13 รพ. ผ่านการทดสอบ Load Test และสำรองน้ำมันเต็มถัง 100%',
-      contingency: 'สัญญาจัดส่งน้ำมันด่วนกับ ปตท. นราธิวาส เติมได้ภายใน 6 ชม.',
-    },
-    {
-      id: 'bcp-2',
-      title: 'ออกซิเจนการแพทย์ (รวมทุกแห่ง)',
-      duration: 'คงอยู่ได้ 48 ชม.',
-      status: 'เฝ้าระวัง',
-      statusType: 'warning',
-      icon: Wind,
-      detail: 'รพ.สุไหงโก-ลก และ รพ.ระแงะ ใช้ออกซิเจนเพิ่มขึ้น 40% จากผู้ป่วยกลุ่มทางเดินหายใจ',
-      contingency: 'จัดรถ 6 ล้อทหารรับท่อออกซิเจนเพิ่มจากโรงงานก๊าซหาดใหญ่ 120 ท่อ',
-    },
-    {
-      id: 'bcp-3',
-      title: 'น้ำใช้สำรองใน รพ.',
-      duration: 'คงอยู่ได้ 72 ชม.',
-      status: 'พร้อม',
-      statusType: 'success',
-      icon: Droplet,
-      detail: 'แท็งก์น้ำสำรองและระบบบำบัดน้ำบาดาลของ รพ. ทุกแห่งพร้อมใช้งาน',
-      contingency: 'รถน้ำ ปภ. ประจำการ 4 คัน พร้อมสนับสนุนหากระบบประปาอำเภอดับ',
-    },
-    {
-      id: 'bcp-4',
-      title: 'ยาจำเป็น / เวชภัณฑ์ฉุกเฉิน',
-      duration: 'สำรอง 30 วัน',
-      status: 'พร้อม',
-      statusType: 'success',
-      icon: Pill,
-      detail: 'ยาต้านเบาหวาน, ยาลดความดัน, ยาปฏิชีวนะ, น้ำยาล้างไต (CAPD) สำรองล่วงหน้า 1 เดือน',
-      contingency: 'คลังยาสำรองยุทธศาสตร์เขตสุขภาพที่ 12 รพ.สงขลานครินทร์ พร้อมจ่าย',
-    },
-    {
-      id: 'bcp-5',
-      title: 'คลังโลหิตสำรอง',
-      duration: 'เพียงพอ (เสี่ยงขาด O, A)',
-      status: 'พร้อม',
-      statusType: 'success',
-      icon: HeartPulse,
-      detail: 'คลังเลือด รพ.นราธิวาสราชนครินทร์ มีเลือดรวม 142 ยูนิต, รพ.สุไหงโก-ลก 45 ยูนิต',
-      contingency: 'สแตนด์บายเบิกเพิ่มจากภาคบริการโลหิตแห่งชาติที่ 12 จ.สงขลา สภากาชาดไทย',
-    },
-    {
-      id: 'bcp-6',
-      title: 'น้ำมันเชื้อเพลิง (Diesel/Gasohol)',
-      duration: 'คงอยู่ได้ 72 ชม.',
-      status: 'เฝ้าระวัง',
-      statusType: 'warning',
-      icon: Fuel,
-      detail: 'สำรองในถังใต้ดินของ รพ. และปั๊มน้ำมันพันธมิตรในพื้นที่ดอน',
-      contingency: 'ขอความอนุเคราะห์คลังน้ำมันกองทัพเรือภาค 2 และค่ายจุฬาภรณ์',
-    },
-    {
-      id: 'bcp-7',
-      title: 'อาหารและเสบียงผู้ป่วย/จนท.',
-      duration: 'คงอยู่ได้ 72 ชม.',
-      status: 'พร้อม',
-      statusType: 'success',
-      icon: Utensils,
-      detail: 'อาหารแห้ง, ข้าวสาร, อาหารฮาลาลสำเร็จรูป, นมผงสำหรับเด็ก และน้ำดื่มบรรจุขวด',
-      contingency: 'ครัวสนามพระราชทาน สภากาชาดไทย และมูลนิธิกู้ภัยในพื้นที่',
-    },
-    {
-      id: 'bcp-8',
-      title: 'กำลังคนขั้นต่ำ / ทีม A-B-C',
-      duration: 'ครบ 85%',
-      status: 'เฝ้าระวัง',
-      statusType: 'warning',
-      icon: Users2,
-      detail: 'บุคลากรบางส่วนติดปัญหาน้ำท่วมทางเข้าบ้าน ได้จัดที่พักภายใน รพ. ให้ครบแล้ว',
-      contingency: 'เรียกระดมทีมแพทย์และพยาบาลจิตอาสาจาก อ.สุคิริน และ อ.บาเจาะ มาช่วยผลัดเปลี่ยน',
-    },
-    {
-      id: 'bcp-9',
-      title: 'วัสดุอุปกรณ์ฉุกเฉินและชุดกู้ชีพ',
-      duration: 'พร้อมใช้งาน 100%',
-      status: 'พร้อม',
-      statusType: 'success',
-      icon: Package,
-      detail: 'ชุดกระเป๋ายาฉุกเฉิน Red Cross, เสื้อชูชีพ 500 ตัว, เครื่อง AED พกพา, เปลกู้ภัยทางน้ำ',
-      contingency: 'สำรองชุดกู้ชีพไว้ที่ สสจ. อีก 50 ชุด พร้อมแจกจ่ายทันที',
-    },
-  ];
+      detail: '',
+      contingencyPlan: '',
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (item: BcpResourceItem) => {
+    setEditingItem(item);
+    setFormData({ ...item });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title) return;
+
+    if (editingItem) {
+      onUpdateBcpItem({
+        ...editingItem,
+        ...(formData as BcpResourceItem),
+      });
+    } else {
+      const newItem: BcpResourceItem = {
+        ...(formData as BcpResourceItem),
+        id: `bcp-${Date.now()}`,
+      };
+      onAddBcpItem(newItem);
+    }
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="space-y-5">
-      {/* Header */}
+      {/* Header with CRUD & Sheet Controls */}
       <div className="bg-slate-900/90 border border-sky-800/40 rounded-xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded bg-blue-950 border border-blue-500/40 text-blue-300 font-mono text-xs font-bold">
-              ข้อ 8
+              ข้อ 6 | ดูแลประชาชน & บัญชาการ
             </span>
-            <h2 className="text-base font-bold text-white">
-              ทรัพยากรและความต่อเนื่องในการดำเนินงานของจังหวัด (BCP Continuity Matrix)
+            <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-bold">
+              CRUD Sheet 100%
+            </span>
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <span>ทรัพยากรและความต่อเนื่อง BCP จังหวัด 9 ด้าน (CRUD ลง Sheet)</span>
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            เกณฑ์ติดตามความพร้อม 9 มิติ ตามมาตรฐานแผนความต่อเนื่องทางธุรกิจด้านสาธารณสุขในภาวะภัยพิบัติ
+            เชื่อมต่อข้อมูลชีตแท็บ: <code className="text-cyan-300 font-mono">BcpResources</code> (Google Sheet ID: 13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY)
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
-          <div className="bg-emerald-950/80 border border-emerald-500/60 px-3 py-1.5 rounded-lg text-emerald-300 font-bold">
-            สถานะความพร้อม BCP: ผ่านเกณฑ์ 100%
-          </div>
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleOpenAdd}
+            className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow transition flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>เพิ่มทรัพยากร BCP</span>
+          </button>
+
+          <button
+            onClick={onSyncWithSheet}
+            disabled={isSyncing}
+            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow transition flex items-center gap-1.5"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>{isSyncing ? 'กำลังซิงค์...' : 'บันทึกลง Sheet (Push)'}</span>
+          </button>
+
+          <button
+            onClick={onPullFromSheet}
+            disabled={isSyncing}
+            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition flex items-center gap-1.5"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>ดึงจาก Sheet (Pull)</span>
+          </button>
         </div>
       </div>
 
-      {/* 9 Grid Cards */}
+      {/* Grid of BCP Items */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {bcpItems.map((item) => {
-          const Icon = item.icon;
-          const isWarning = item.statusType === 'warning';
+          const isWarning = item.status === 'เฝ้าระวัง' || item.status === 'เสี่ยงขาด';
+          const isDanger = item.status === 'วิกฤต';
+
           return (
             <div
               key={item.id}
               className={`p-4 rounded-xl border shadow-lg transition-all ${
-                isWarning
-                  ? 'bg-amber-950/20 border-amber-500/50 hover:bg-amber-950/30'
-                  : 'bg-slate-900/80 border-sky-800/40 hover:border-sky-700/60'
+                isDanger
+                  ? 'bg-rose-950/20 border-rose-500/50'
+                  : isWarning
+                  ? 'bg-amber-950/20 border-amber-500/50'
+                  : 'bg-slate-900/80 border-sky-800/40'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      isWarning ? 'bg-amber-500/20 text-amber-300' : 'bg-cyan-500/20 text-cyan-300'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-white">{item.title}</h3>
-                    <div className="text-xs font-mono font-bold text-cyan-300 mt-0.5">
-                      {item.duration}
-                    </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">{item.title}</h3>
+                  <div className="text-xs font-mono font-bold text-cyan-300 mt-0.5">
+                    {item.duration}
                   </div>
                 </div>
 
-                <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                    isWarning
-                      ? 'bg-amber-950 text-amber-300 border border-amber-500/60 animate-pulse'
-                      : 'bg-emerald-950 text-emerald-300 border border-emerald-500/60'
-                  }`}
-                >
-                  {item.status}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      isDanger
+                        ? 'bg-rose-950 text-rose-300 border border-rose-500/60'
+                        : isWarning
+                        ? 'bg-amber-950 text-amber-300 border border-amber-500/60'
+                        : 'bg-emerald-950 text-emerald-300 border border-emerald-500/60'
+                    }`}
+                  >
+                    {item.status}
+                  </span>
+
+                  <button
+                    onClick={() => handleOpenEdit(item)}
+                    title="แก้ไข"
+                    className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (confirm(`ยืนยันการลบ ${item.title} หรือไม่?`)) {
+                        onDeleteBcpItem(item.id);
+                      }
+                    }}
+                    title="ลบ"
+                    className="p-1 rounded bg-slate-800 hover:bg-red-950 text-slate-400 hover:text-red-300"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               <div className="mt-2 pt-2 border-t border-slate-800/80 text-xs space-y-1.5">
@@ -181,13 +204,105 @@ export const BcpResourcesView: React.FC = () => {
                 </div>
                 <div className="text-cyan-200/90 text-[11px] leading-relaxed bg-slate-950/70 p-2 rounded border border-slate-800">
                   <span className="font-semibold text-cyan-400">แผนฉุกเฉิน (Contingency): </span>
-                  {item.contingency}
+                  {item.contingencyPlan}
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* BCP Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-slate-900 border border-sky-700/60 rounded-xl p-5 w-full max-w-lg shadow-2xl my-8 text-xs text-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                <span>{editingItem ? 'แก้ไขทรัพยากร BCP' : 'เพิ่มทรัพยากร BCP ใหม่'}</span>
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <label className="block text-slate-400 mb-1">ชื่อทรัพยากร / หมวดหมู่ *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs"
+                  placeholder="เช่น ไฟฟ้าสำรอง / Generator"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 mb-1">ระยะเวลาความอยู่รอด</label>
+                  <input
+                    type="text"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs font-mono"
+                    placeholder="เช่น คงอยู่ได้ 72 ชม."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">สถานะ</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs"
+                  >
+                    <option value="พร้อม">พร้อม (Normal)</option>
+                    <option value="เฝ้าระวัง">เฝ้าระวัง (Warning)</option>
+                    <option value="เสี่ยงขาด">เสี่ยงขาด (Risk)</option>
+                    <option value="วิกฤต">วิกฤต (Critical)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 mb-1">รายละเอียดสภาพปัจจุบัน</label>
+                <textarea
+                  rows={2}
+                  value={formData.detail}
+                  onChange={(e) => setFormData({ ...formData, detail: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 mb-1">แผนรองรับฉุกเฉิน (Contingency Plan)</label>
+                <textarea
+                  rows={2}
+                  value={formData.contingencyPlan}
+                  onChange={(e) => setFormData({ ...formData, contingencyPlan: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded bg-slate-800 text-slate-300 text-xs"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs shadow"
+                >
+                  {editingItem ? 'บันทึกการแก้ไข' : 'บันทึกทรัพยากร'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

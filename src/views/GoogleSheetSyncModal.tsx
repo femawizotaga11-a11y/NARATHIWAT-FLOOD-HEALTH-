@@ -297,6 +297,51 @@ export const GoogleSheetSyncModal: React.FC<Props> = ({
                 </div>
               </div>
 
+              {/* 8-Sheet Database Inventory Overview */}
+              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                <div className="font-bold text-sky-200 text-xs flex items-center justify-between">
+                  <span>ตารางฐานข้อมูล 8 แท็บชีตมาตรฐาน (ข้อ 4 - ข้อ 11 ยึด Sheet เป็นหลัก 100%):</span>
+                  <span className="text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/40">
+                    CRUD Two-way Live
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <div className="text-slate-400 text-[10px]">ข้อ 4: ผู้ป่วยเปราะบาง</div>
+                    <div className="font-mono text-cyan-300 font-bold">VulnerableRegistry</div>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <div className="text-slate-400 text-[10px]">ข้อ 5: ส่งต่อ & OPOH</div>
+                    <div className="font-mono text-cyan-300 font-bold">ReferralRoutes</div>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <div className="text-slate-400 text-[10px]">ข้อ 6: ทรัพยากร BCP</div>
+                    <div className="font-mono text-cyan-300 font-bold">BcpResources</div>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <div className="text-slate-400 text-[10px]">ข้อ 7: Staff & อัตรากำลัง</div>
+                    <div className="font-mono text-cyan-300 font-bold">StaffRoster</div>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <div className="text-slate-400 text-[10px]">ข้อ 8: 13 รพ. & RTO</div>
+                    <div className="font-mono text-cyan-300 font-bold">HospitalStatus</div>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <div className="text-slate-400 text-[10px]">ข้อ 9: 111 รพ.สต.</div>
+                    <div className="font-mono text-cyan-300 font-bold">ShphNetwork</div>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <div className="text-slate-400 text-[10px]">ข้อ 10: สื่อสาร 4 ระดับ</div>
+                    <div className="font-mono text-cyan-300 font-bold">CommunicationLayers</div>
+                  </div>
+                  <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                    <div className="text-slate-400 text-[10px]">ข้อ 11: นำเข้าเมื่อเกิน RTO</div>
+                    <div className="font-mono text-cyan-300 font-bold">ReplenishmentPlans</div>
+                  </div>
+                </div>
+              </div>
+
               {/* ID & Web App URL Configuration Inputs */}
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
                 <div className="font-bold text-sky-300 text-xs">

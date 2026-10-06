@@ -33,7 +33,7 @@ export const GisMap: React.FC<Props> = ({
     evacHelipads: true,
   });
 
-  const [mapStyle, setMapStyle] = useState<'dark' | 'satellite' | 'street'>('dark');
+  const [mapStyle, setMapStyle] = useState<'dark' | 'satellite' | 'street' | 'topo'>('dark');
 
   // Narathiwat coordinates: approx 6.4255, 101.8253
   const centerLat = 6.25;
@@ -52,12 +52,13 @@ export const GisMap: React.FC<Props> = ({
 
     mapInstanceRef.current = map;
 
-    // Add CartoDB Dark Matter tile layer by default for government tactical look
-    const darkTiles = L.tileLayer(
+    // Add CartoDB Dark Matter tile layer by default for government tactical look (No API Key)
+    L.tileLayer(
       'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
       {
         maxZoom: 19,
         subdomains: 'abcd',
+        attribution: '© OpenStreetMap contributors © CARTO (NO API KEY)',
       }
     ).addTo(map);
 
@@ -75,7 +76,7 @@ export const GisMap: React.FC<Props> = ({
     };
   }, []);
 
-  // Update tile layer when style changes
+  // Update tile layer when style changes (100% Free - NO API KEY required)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -88,13 +89,31 @@ export const GisMap: React.FC<Props> = ({
     });
 
     let tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    let attribution = '© OpenStreetMap © CARTO (NO API KEY)';
+    let maxZoom = 19;
+
     if (mapStyle === 'satellite') {
+      // 100% Free Public ESRI World Imagery (High-Res Real Satellite Photos - NO API KEY required)
       tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      attribution = '© Esri, Maxar, Earthstar Geographics (NO API KEY)';
+      maxZoom = 18;
     } else if (mapStyle === 'street') {
+      // 100% Free OpenStreetMap Standard (NO API KEY required)
       tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      attribution = '© OpenStreetMap contributors (NO API KEY)';
+      maxZoom = 19;
+    } else if (mapStyle === 'topo') {
+      // 100% Free OpenTopoMap (Elevation contours & river systems - NO API KEY required)
+      tileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+      attribution = '© OpenTopoMap contributors (NO API KEY)';
+      maxZoom = 17;
     }
 
-    L.tileLayer(tileUrl, { maxZoom: 19 }).addTo(map);
+    L.tileLayer(tileUrl, {
+      maxZoom,
+      subdomains: 'abc',
+      attribution,
+    }).addTo(map);
   }, [mapStyle]);
 
   // Render markers and vector geometries
@@ -436,9 +455,9 @@ export const GisMap: React.FC<Props> = ({
 
       {/* Map Control Bar Top-Left */}
       <div className="absolute top-3 left-3 z-[1000] flex flex-wrap items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-sky-700/50 shadow-lg text-xs">
-        <span className="font-semibold text-cyan-300 flex items-center gap-1.5">
+        <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
           <Map className="w-3.5 h-3.5" />
-          <span>GISTDA & ThaiWater GIS Command</span>
+          <span>Open GIS (NO API KEY)</span>
         </span>
         <div className="h-4 w-px bg-slate-700 mx-1" />
         {/* Base map style selector */}
@@ -457,7 +476,7 @@ export const GisMap: React.FC<Props> = ({
               mapStyle === 'satellite' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-white'
             }`}
           >
-            ดาวเทียม
+            🛰️ ดาวเทียมจริง (ESRI)
           </button>
           <button
             onClick={() => setMapStyle('street')}
@@ -465,7 +484,15 @@ export const GisMap: React.FC<Props> = ({
               mapStyle === 'street' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-white'
             }`}
           >
-            ถนน/ผังเมือง
+            🗺️ ถนน (OSM)
+          </button>
+          <button
+            onClick={() => setMapStyle('topo')}
+            className={`px-2 py-0.5 rounded text-[11px] transition ${
+              mapStyle === 'topo' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            ⛰️ ภูมิประเทศ (Topo)
           </button>
         </div>
       </div>

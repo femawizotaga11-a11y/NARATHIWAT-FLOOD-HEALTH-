@@ -176,6 +176,58 @@ export interface ReplenishmentPlan {
   status: 'เตรียมพร้อมระดับ 2' | 'พร้อมขนส่งทันที' | 'ปฏิบัติการอยู่';
 }
 
+export interface ShphItem {
+  id: string;
+  name: string;
+  district: string;
+  subdistrict: string;
+  status: 'ปกติ' | 'เฝ้าระวัง' | 'เสี่ยง' | 'ปิดบริการ';
+  totalStaff: number;
+  phone: string;
+  vulnerableCovered: number;
+  riskLevel: 'เขียว' | 'เหลือง' | 'ส้ม' | 'แดง';
+  contingencyPlan: string;
+}
+
+export interface StaffTeamItem {
+  id: string;
+  hospitalName: string;
+  district: string;
+  department: string;
+  teamName: string;
+  currentShift: 'ทีม A' | 'ทีม B' | 'ทีม C';
+  doctorCount: number;
+  nurseCount: number;
+  emtCount: number;
+  readinessPct: number;
+  leaderName: string;
+  contactPhone: string;
+}
+
+export interface BcpResourceItem {
+  id: string;
+  title: string;
+  duration: string;
+  status: 'พร้อม' | 'เฝ้าระวัง' | 'เสี่ยงขาด' | 'วิกฤต';
+  statusType: 'success' | 'warning' | 'danger';
+  detail: string;
+  contingencyPlan: string;
+  lastChecked?: string;
+}
+
+export interface ReferralRouteItem {
+  id: string;
+  originHospital: string;
+  destinationHospital: string;
+  routeType: 'ทางบก' | 'ทางน้ำ' | 'ทางอากาศ';
+  primaryPath: string;
+  bypassPath: string;
+  estimatedMinutes: number;
+  safetyStatus: 'พร้อมใช้' | 'เฝ้าระวัง' | 'วิกฤต';
+  vehicleNeeded: string;
+  availableBeds: number;
+}
+
 export interface SheetSyncConfig {
   sheetId: string;
   gasWebAppUrl: string;

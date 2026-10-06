@@ -266,7 +266,10 @@ export const VulnerablePatientView: React.FC<Props> = ({
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold">
-              ข้อ 6
+              ข้อ 4 | ดูแลประชาชน & บัญชาการ
+            </span>
+            <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-bold">
+              CRUD Sheet 100%
             </span>
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <span>ทะเบียนกลุ่มผู้ป่วยเปราะบางที่ต้องเคลื่อนย้าย (Vulnerable Patient Registry & CRUD)</span>
