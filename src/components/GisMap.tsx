@@ -3,6 +3,9 @@ import L from 'leaflet';
 import { HospitalStatus, RoadCutIncident, WaterStation } from '../types/dashboard';
 import { Map, Layers, Navigation, AlertTriangle, Shield, Anchor } from 'lucide-react';
 
+// Leafmap Open GIS Mapping Layer Engine (Leaflet + Open Data Tile Services - NO API KEY NEEDED)
+export type MapStyleType = 'street' | 'satellite' | 'dark' | 'topo';
+
 interface Props {
   hospitals: HospitalStatus[];
   roadCuts: RoadCutIncident[];
@@ -33,7 +36,8 @@ export const GisMap: React.FC<Props> = ({
     evacHelipads: true,
   });
 
-  const [mapStyle, setMapStyle] = useState<'dark' | 'satellite' | 'street' | 'topo'>('street');
+  // Default to OpenStreetMap (ถนน OSM) as requested, fully open Leafmap standard
+  const [mapStyle, setMapStyle] = useState<MapStyleType>('street');
 
   // Narathiwat coordinates: approx 6.4255, 101.8253
   const centerLat = 6.25;
@@ -52,13 +56,13 @@ export const GisMap: React.FC<Props> = ({
 
     mapInstanceRef.current = map;
 
-    // Add OpenStreetMap Standard (OSM) tile layer by default (Requirement 2: แผนที่เริ่มต้นใช้ แผนถนน OSM)
+    // Leafmap Default: OpenStreetMap (OSM) Standard Tile Layer (Open GIS - Zero API Key)
     L.tileLayer(
       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {
         maxZoom: 19,
         subdomains: 'abc',
-        attribution: '© OpenStreetMap contributors (NO API KEY)',
+        attribution: 'Leafmap | © OpenStreetMap contributors',
       }
     ).addTo(map);
 
@@ -76,7 +80,7 @@ export const GisMap: React.FC<Props> = ({
     };
   }, []);
 
-  // Update tile layer when style changes (100% Free - NO API KEY required)
+  // Update tile layer based on Leafmap tile styles
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -88,25 +92,30 @@ export const GisMap: React.FC<Props> = ({
       }
     });
 
-    let tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-    let attribution = '© OpenStreetMap © CARTO (NO API KEY)';
+    let tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let attribution = 'Leafmap | © OpenStreetMap contributors';
     let maxZoom = 19;
 
     if (mapStyle === 'satellite') {
-      // 100% Free Public ESRI World Imagery (High-Res Real Satellite Photos - NO API KEY required)
+      // Leafmap ESRI World Imagery (High-Res True Satellite Photography)
       tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      attribution = '© Esri, Maxar, Earthstar Geographics (NO API KEY)';
+      attribution = 'Leafmap | © Esri World Imagery, Maxar, Earthstar Geographics';
       maxZoom = 18;
-    } else if (mapStyle === 'street') {
-      // 100% Free OpenStreetMap Standard (NO API KEY required)
-      tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-      attribution = '© OpenStreetMap contributors (NO API KEY)';
+    } else if (mapStyle === 'dark') {
+      // Leafmap CartoDB Dark Matter (Tactical Dark Ops)
+      tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      attribution = 'Leafmap | © CARTO Dark Matter © OpenStreetMap';
       maxZoom = 19;
     } else if (mapStyle === 'topo') {
-      // 100% Free OpenTopoMap (Elevation contours & river systems - NO API KEY required)
+      // Leafmap OpenTopoMap (Topographic contours and hydrography)
       tileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-      attribution = '© OpenTopoMap contributors (NO API KEY)';
+      attribution = 'Leafmap | © OpenTopoMap contributors';
       maxZoom = 17;
+    } else {
+      // Standard Street OSM
+      tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      attribution = 'Leafmap | © OpenStreetMap contributors';
+      maxZoom = 19;
     }
 
     L.tileLayer(tileUrl, {
@@ -456,40 +465,43 @@ export const GisMap: React.FC<Props> = ({
       {/* Map Control Bar Top-Left */}
       <div className="absolute top-3 left-3 z-[1000] flex flex-wrap items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-sky-700/50 shadow-lg text-xs">
         <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
-          <Map className="w-3.5 h-3.5" />
-          <span>Open GIS (NO API KEY)</span>
+          <Map className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Leafmap Open GIS</span>
+          <span className="text-[10px] bg-emerald-950 px-1.5 py-0.2 rounded border border-emerald-500/40 text-emerald-300 font-mono">
+            Zero API Key
+          </span>
         </span>
         <div className="h-4 w-px bg-slate-700 mx-1" />
         {/* Base map style selector */}
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setMapStyle('dark')}
-            className={`px-2 py-0.5 rounded text-[11px] transition ${
-              mapStyle === 'dark' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Tactical Dark
-          </button>
-          <button
-            onClick={() => setMapStyle('satellite')}
-            className={`px-2 py-0.5 rounded text-[11px] transition ${
-              mapStyle === 'satellite' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            🛰️ ดาวเทียมจริง (ESRI)
-          </button>
-          <button
             onClick={() => setMapStyle('street')}
             className={`px-2 py-0.5 rounded text-[11px] transition ${
-              mapStyle === 'street' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+              mapStyle === 'street' ? 'bg-cyan-600 text-white font-medium shadow' : 'text-slate-400 hover:text-white'
             }`}
           >
             🗺️ ถนน (OSM)
           </button>
           <button
+            onClick={() => setMapStyle('satellite')}
+            className={`px-2 py-0.5 rounded text-[11px] transition ${
+              mapStyle === 'satellite' ? 'bg-cyan-600 text-white font-medium shadow' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            🛰️ ดาวเทียมจริง (ESRI)
+          </button>
+          <button
+            onClick={() => setMapStyle('dark')}
+            className={`px-2 py-0.5 rounded text-[11px] transition ${
+              mapStyle === 'dark' ? 'bg-cyan-600 text-white font-medium shadow' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Tactical Dark
+          </button>
+          <button
             onClick={() => setMapStyle('topo')}
             className={`px-2 py-0.5 rounded text-[11px] transition ${
-              mapStyle === 'topo' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+              mapStyle === 'topo' ? 'bg-cyan-600 text-white font-medium shadow' : 'text-slate-400 hover:text-white'
             }`}
           >
             ⛰️ ภูมิประเทศ (Topo)

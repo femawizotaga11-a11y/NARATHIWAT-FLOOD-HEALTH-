@@ -544,7 +544,7 @@ export default function App() {
               />
             )}
 
-            {/* ข้อ 1: เสี่ยงอุทกภัย GISTDA & ปภ. (NO API KEY MAP) */}
+            {/* ข้อ 1: เสี่ยงอุทกภัย GISTDA & ปภ. (Leafmap Open GIS Engine) */}
             {activeTab === 'gistda_weather' && (
               <GistdaWeatherMap
                 weather={weather}
@@ -561,7 +561,7 @@ export default function App() {
               <DistrictRiskView districts={districts} />
             )}
 
-            {/* ข้อ 3: เส้นทางตัดขาด 3 ปีย้อนหลัง & เส้นทางสำรอง (NO API KEY MAP) */}
+            {/* ข้อ 3: เส้นทางตัดขาด 3 ปีย้อนหลัง & เส้นทางสำรอง (Leafmap Open GIS Engine) */}
             {activeTab === 'road_cuts' && (
               <RoadCutMapView
                 roadCuts={roadCuts}
