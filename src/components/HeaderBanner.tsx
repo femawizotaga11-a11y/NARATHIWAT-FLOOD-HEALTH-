@@ -27,6 +27,11 @@ interface Props {
   sheetConnected: boolean;
   fontSize: FontSizeLevel;
   onChangeFontSize: (size: FontSizeLevel) => void;
+  autoSyncEnabled?: boolean;
+  autoSyncSeconds?: number;
+  lastSyncTime?: string | null;
+  isSyncing?: boolean;
+  onToggleAutoSync?: () => void;
 }
 
 export const HeaderBanner: React.FC<Props> = ({
@@ -37,6 +42,11 @@ export const HeaderBanner: React.FC<Props> = ({
   sheetConnected,
   fontSize,
   onChangeFontSize,
+  autoSyncEnabled = true,
+  autoSyncSeconds = 60,
+  lastSyncTime,
+  isSyncing = false,
+  onToggleAutoSync,
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
 
@@ -108,6 +118,27 @@ export const HeaderBanner: React.FC<Props> = ({
             <span>GAS Sheet: 13KGqr...</span>
             <ExternalLink className="w-3 h-3 ml-0.5 opacity-70" />
           </button>
+
+          {/* Auto-Sync Indicator & Trigger (Requirement 2: Auto ซิงค์ทุกๆ) */}
+          <div
+            onClick={onToggleAutoSync}
+            className={`cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-mono transition-all select-none ${
+              autoSyncEnabled
+                ? 'bg-cyan-950/60 border-cyan-500/50 text-cyan-200 hover:bg-cyan-900/50'
+                : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-300'
+            }`}
+            title={`คลิกเพื่อเปิด/ปิด Auto Sync (ซิงค์อัตโนมัติทุกๆ ${autoSyncSeconds} วินาที)`}
+          >
+            <RefreshCw className={`w-3 h-3 text-cyan-400 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span className="font-semibold">
+              {autoSyncEnabled ? `Auto ซิงค์ทุก ${autoSyncSeconds}s` : 'Auto ซิงค์: ปิด'}
+            </span>
+            {lastSyncTime && (
+              <span className="hidden lg:inline text-[9px] text-slate-400 border-l border-cyan-800/80 pl-1.5 ml-0.5">
+                {lastSyncTime}
+              </span>
+            )}
+          </div>
 
           {/* Font Size Adjuster (Requirement 1: มีปุ่มปรับขนาดตัวอักษร) */}
           <div className="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-md p-0.5 text-[11px] gap-0.5">

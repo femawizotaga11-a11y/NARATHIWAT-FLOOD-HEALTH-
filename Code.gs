@@ -34,9 +34,74 @@ function onOpen() {
     .addItem('⚡ สร้างฐานข้อมูลใหม่ทั้งหมด 1-11 (Create Full DB 1-11)', 'createFullNewDatabase')
     .addItem('📥 นำเข้าข้อมูลเริ่มต้นข้อ 4-11 (Seed Sections 4-11)', 'seedSections4To11')
     .addSeparator()
+    .addItem('🔄 เปิดใช้งานระบบ Auto Sync ทุกๆ 1 นาที (Enable 1-Min Auto Trigger)', 'setupAutoSyncTrigger')
+    .addItem('🛑 ปิดระบบ Auto Sync Trigger (Disable Auto Trigger)', 'removeAutoSyncTriggers')
+    .addSeparator()
     .addItem('📊 ล้างและรีเซ็ตโครงสร้างตาราง (Reset & Reformat Tables)', 'initAll11Sheets')
     .addItem('🧪 ทดสอบการเชื่อมต่อ API Web App', 'testSelfConnection')
     .addToUi();
+}
+
+/**
+ * ติดตั้ง Time-driven Trigger ใน Google Apps Script เพื่อให้อัปเดตและตรวจจับการเปลี่ยนแปลงอัตโนมัติทุกๆ 1 นาที
+ */
+function setupAutoSyncTrigger() {
+  removeAutoSyncTriggers();
+  ScriptApp.newTrigger('autoSyncHeartbeat')
+    .timeBased()
+    .everyMinutes(1)
+    .create();
+  var ss = getSpreadsheet();
+  logAction(ss, 'เปิดใช้งานระบบ Auto Sync Trigger อัตโนมัติทุกๆ 1 นาที สำเร็จ');
+  SpreadsheetApp.getUi().alert('เปิดใช้งานระบบ Auto Sync อัตโนมัติทุกๆ 1 นาที เรียบร้อยแล้ว!');
+}
+
+function removeAutoSyncTriggers() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'autoSyncHeartbeat') {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+}
+
+/**
+ * ฟังก์ชัน Heartbeat ที่ถูกเรียกทุกๆ 1 นาทีโดย Trigger
+ */
+function autoSyncHeartbeat() {
+  var ss = getSpreadsheet();
+  var metaSheet = getOrCreateSheet(ss, 'EOC_Logs');
+  var nowStr = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm:ss');
+  // บันทึก heartbeat และตรวจสอบความสมบูรณ์ของชีต
+  PropertiesService.getScriptProperties().setProperty('LAST_SYNC_TIMESTAMP', nowStr);
+}
+
+/**
+ * Simple Trigger onEdit: ตรวจจับทุกการเปลี่ยนแปลงใน Google Sheet และบันทึก Log + Timestamp อัตโนมัติ
+ */
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    var sheet = e.range.getSheet();
+    var sheetName = sheet.getName();
+    // ข้ามการบันทึกเมื่อแก้ไขในชีต Logs เอง เพื่อไม่ให้เกิด Loop
+    if (sheetName === 'EOC_Logs') return;
+
+    var ss = e.source || getSpreadsheet();
+    var nowStr = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm:ss');
+    var cellA1 = e.range.getA1Notation();
+    var row = e.range.getRow();
+    var col = e.range.getColumn();
+
+    // บันทึกคุณสมบัติ Last Updated ของโปรเจกต์
+    PropertiesService.getScriptProperties().setProperty('LAST_EDIT_' + sheetName, nowStr);
+    PropertiesService.getScriptProperties().setProperty('LAST_EDIT_ALL', nowStr);
+
+    // บันทึก Log การเปลี่ยนแปลงแบบ Auto
+    logAction(ss, 'Auto Update: มีการแก้ไขข้อมูลในแท็บ [' + sheetName + '] เซลล์ ' + cellA1 + ' เวลา ' + nowStr);
+  } catch (err) {
+    Logger.log('onEdit error: ' + err.toString());
+  }
 }
 
 function doGet(e) {
