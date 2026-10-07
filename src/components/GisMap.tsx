@@ -33,7 +33,7 @@ export const GisMap: React.FC<Props> = ({
     evacHelipads: true,
   });
 
-  const [mapStyle, setMapStyle] = useState<'dark' | 'satellite' | 'street' | 'topo'>('dark');
+  const [mapStyle, setMapStyle] = useState<'dark' | 'satellite' | 'street' | 'topo'>('street');
 
   // Narathiwat coordinates: approx 6.4255, 101.8253
   const centerLat = 6.25;
@@ -52,13 +52,13 @@ export const GisMap: React.FC<Props> = ({
 
     mapInstanceRef.current = map;
 
-    // Add CartoDB Dark Matter tile layer by default for government tactical look (No API Key)
+    // Add OpenStreetMap Standard (OSM) tile layer by default (Requirement 2: แผนที่เริ่มต้นใช้ แผนถนน OSM)
     L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {
         maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: '© OpenStreetMap contributors © CARTO (NO API KEY)',
+        subdomains: 'abc',
+        attribution: '© OpenStreetMap contributors (NO API KEY)',
       }
     ).addTo(map);
 

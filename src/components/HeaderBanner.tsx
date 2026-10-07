@@ -11,8 +11,13 @@ import {
   Clock,
   RefreshCw,
   ExternalLink,
+  Type,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { LiveWeatherData } from '../types/dashboard';
+
+export type FontSizeLevel = 'sm' | 'md' | 'lg' | 'xl';
 
 interface Props {
   weather: LiveWeatherData;
@@ -20,6 +25,8 @@ interface Props {
   isLoadingWeather: boolean;
   onOpenSheetModal: () => void;
   sheetConnected: boolean;
+  fontSize: FontSizeLevel;
+  onChangeFontSize: (size: FontSizeLevel) => void;
 }
 
 export const HeaderBanner: React.FC<Props> = ({
@@ -28,6 +35,8 @@ export const HeaderBanner: React.FC<Props> = ({
   isLoadingWeather,
   onOpenSheetModal,
   sheetConnected,
+  fontSize,
+  onChangeFontSize,
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
 
@@ -99,6 +108,58 @@ export const HeaderBanner: React.FC<Props> = ({
             <span>GAS Sheet: 13KGqr...</span>
             <ExternalLink className="w-3 h-3 ml-0.5 opacity-70" />
           </button>
+
+          {/* Font Size Adjuster (Requirement 1: มีปุ่มปรับขนาดตัวอักษร) */}
+          <div className="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-md p-0.5 text-[11px] gap-0.5">
+            <span className="flex items-center gap-1 px-1.5 text-slate-400 font-medium text-[10px]">
+              <Type className="w-3 h-3 text-cyan-400" />
+              <span>ตัวอักษร:</span>
+            </span>
+            <button
+              onClick={() => onChangeFontSize('sm')}
+              title="ขนาดตัวอักษรเล็ก (14px)"
+              className={`px-1.5 py-0.5 rounded font-mono text-[10px] font-bold transition ${
+                fontSize === 'sm'
+                  ? 'bg-cyan-500 text-slate-950 shadow'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              ก-
+            </button>
+            <button
+              onClick={() => onChangeFontSize('md')}
+              title="ขนาดตัวอักษรปกติ (16px)"
+              className={`px-1.5 py-0.5 rounded font-mono text-[10px] font-bold transition ${
+                fontSize === 'md'
+                  ? 'bg-cyan-500 text-slate-950 shadow'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              ก ปกติ
+            </button>
+            <button
+              onClick={() => onChangeFontSize('lg')}
+              title="ขนาดตัวอักษรใหญ่ (18px)"
+              className={`px-1.5 py-0.5 rounded font-mono text-[10px] font-bold transition ${
+                fontSize === 'lg'
+                  ? 'bg-cyan-500 text-slate-950 shadow'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              ก+
+            </button>
+            <button
+              onClick={() => onChangeFontSize('xl')}
+              title="ขนาดตัวอักษรใหญ่พิเศษ (20px)"
+              className={`px-1.5 py-0.5 rounded font-mono text-[10px] font-bold transition ${
+                fontSize === 'xl'
+                  ? 'bg-cyan-500 text-slate-950 shadow'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              ก++
+            </button>
+          </div>
 
           {/* Clock */}
           <div className="flex items-center gap-1.5 text-slate-300 font-mono text-[11px] bg-slate-900/80 px-2.5 py-1 rounded-md border border-slate-700/60">

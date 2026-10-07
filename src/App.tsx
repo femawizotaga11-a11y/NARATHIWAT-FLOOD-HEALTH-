@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sidebar, TabId } from './components/Sidebar';
-import { HeaderBanner } from './components/HeaderBanner';
+import { HeaderBanner, FontSizeLevel } from './components/HeaderBanner';
 import { OverviewView } from './views/OverviewView';
 import { GistdaWeatherMap } from './views/GistdaWeatherMap';
 import { DistrictRiskView } from './views/DistrictRiskView';
@@ -121,6 +121,24 @@ export default function App() {
 
   // Sync notification toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Font size state (Requirement 1: ปรับขนาดตัวอักษร)
+  const [fontSize, setFontSize] = useState<FontSizeLevel>(() => {
+    try {
+      const saved = localStorage.getItem('eoc_font_size');
+      if (saved === 'sm' || saved === 'md' || saved === 'lg' || saved === 'xl') return saved;
+    } catch (_) {}
+    return 'md';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('eoc_font_size', fontSize);
+    } catch (_) {}
+    const root = document.documentElement;
+    root.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg', 'font-size-xl');
+    root.classList.add(`font-size-${fontSize}`);
+  }, [fontSize]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -483,6 +501,8 @@ export default function App() {
         isLoadingWeather={isLoadingWeather}
         onOpenSheetModal={() => setIsSheetModalOpen(true)}
         sheetConnected={Boolean(sheetConfig.sheetId)}
+        fontSize={fontSize}
+        onChangeFontSize={setFontSize}
       />
 
       {/* Main Workspace: Left Sidebar + Right Content Area */}

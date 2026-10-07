@@ -29,6 +29,20 @@
   line-height: 1.5 !important;
 }
 
+/* Custom font sizing classes for accessibility font adjustment */
+html.font-size-sm {
+  font-size: 14px;
+}
+html.font-size-md {
+  font-size: 16px;
+}
+html.font-size-lg {
+  font-size: 18px;
+}
+html.font-size-xl {
+  font-size: 20px;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

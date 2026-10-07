@@ -660,59 +660,135 @@ export const GoogleSheetSyncModal: React.FC<Props> = ({
           )}
 
           {/* ======================================================== */}
-          {/* TAB 3: UNLOCK PERMISSIONS GUIDE                          */}
+          {/* TAB 3: UNLOCK PERMISSIONS GUIDE (FULL UNLOCK 100%)       */}
           {/* ======================================================== */}
           {activeTab === 'unlock' && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/40 space-y-3">
-                <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
-                  <Unlock className="w-5 h-5" />
-                  <span>คู่มือการปลดล็อคสิทธิ์การเข้าถึง (Permission Unlock Guide 100%)</span>
+              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/40 via-slate-900 to-emerald-950/40 border border-amber-500/50 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
+                    <Unlock className="w-5 h-5 text-amber-400" />
+                    <span>เมนูปลดล็อคสิทธิ์การเข้าถึง Google Sheet แบบ Full Access 100%</span>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 text-[10px] font-mono font-bold">
+                    TWO-WAY READ & WRITE UNLOCKED
+                  </span>
                 </div>
                 <p className="text-slate-300 text-xs leading-relaxed">
-                  เพื่อให้ Google Sheet (ID: <code className="text-cyan-300 font-mono">{sheetIdInput}</code>) สามารถรับการบันทึก Two-way CRUD จากเว็บได้อย่างอิสระ โปรดทำ 2 ขั้นตอนนี้:
+                  เพื่อให้ Google Sheet (ID: <code className="text-cyan-300 font-mono font-bold">{sheetIdInput}</code>) สามารถรับ-ส่งข้อมูลกับ EOC Dashboard ได้สมบูรณ์ ทั้งการอ่านสด (Real-time Pull) และการบันทึก/แก้ไข/ลบ (CRUD Push) โปรดดำเนินการตาม 3 ขั้นตอนดังนี้:
                 </p>
 
-                {/* Step 1: Sheet Sharing */}
-                <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
-                  <div className="font-bold text-white text-xs flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono font-bold text-[11px]">
-                      1
-                    </span>
-                    <span>ปลดล็อคสิทธิ์บน Google Sheet ให้ทุกคนที่มีลิงก์เข้าถึงได้</span>
+                {/* Step 1: Sheet Sharing Permission */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-amber-500/30 space-y-3">
+                  <div className="font-bold text-white text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-mono font-black text-xs">
+                        1
+                      </span>
+                      <span className="text-amber-200">ปลดล็อคสิทธิ์การแชร์บน Google Sheet (General Access: Anyone with link)</span>
+                    </div>
+                    <a
+                      href={`https://docs.google.com/spreadsheets/d/${sheetIdInput}/edit`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 text-[11px] font-semibold flex items-center gap-1 transition"
+                    >
+                      <span>คลิกเพื่อเปิดชีตทันที</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
-                  <ol className="list-decimal list-inside space-y-1 text-slate-300 text-[11px] pl-2 leading-relaxed">
-                    <li>เปิด Google Sheet (ID: <code className="text-cyan-300 font-mono">{sheetIdInput}</code>)</li>
-                    <li>คลิกปุ่ม <b>"แชร์ (Share)"</b> สีเขียว/น้ำเงิน ที่มุมบนขวา</li>
-                    <li>ในหัวข้อ <b>"การเข้าถึงทั่วไป (General access)"</b> เปลี่ยนจาก <i>จำกัด (Restricted)</i> เป็น <b className="text-emerald-400">"ทุกคนที่มีลิงก์ (Anyone with the link)"</b></li>
-                    <li>กำหนดสิทธิ์เป็น <b className="text-emerald-400">"ผู้แก้ไข (Editor)"</b></li>
-                    <li>กด <b>"เสร็จสิ้น (Done)"</b></li>
+                  <ol className="list-decimal list-inside space-y-1.5 text-slate-300 text-xs pl-2 leading-relaxed">
+                    <li>เปิดชีตของคุณ หรือกดปุ่ม <b>"คลิกเพื่อเปิดชีตทันที"</b> ด้านบน</li>
+                    <li>กดปุ่ม <b className="text-cyan-300">"แชร์ (Share)"</b> สีเขียว/น้ำเงิน ที่มุมบนขวาสุดของ Google Sheet</li>
+                    <li>
+                      ในกล่องหัวข้อ <b>"การเข้าถึงทั่วไป (General access)"</b>:
+                      <div className="mt-1 ml-4 p-2.5 rounded-lg bg-slate-900 border border-slate-800 space-y-1 text-[11px]">
+                        <div>• เปลี่ยนจาก <i className="text-rose-400">"จำกัด (Restricted)"</i> เป็น ➜ <b className="text-emerald-400">"ทุกคนที่มีลิงก์ (Anyone with the link)"</b></div>
+                        <div>• ช่องขวามือ กำหนดสิทธิ์เป็น ➜ <b className="text-emerald-400">"ผู้แก้ไข (Editor)"</b> เพื่อให้สิทธิ์ทั้งอ่านและเขียน</div>
+                      </div>
+                    </li>
+                    <li>กดปุ่ม <b>"เสร็จสิ้น (Done)"</b></li>
                   </ol>
                 </div>
 
-                {/* Step 2: Apps Script Web App Deployment */}
-                <div className="p-3.5 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
-                  <div className="font-bold text-white text-xs flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono font-bold text-[11px]">
-                      2
-                    </span>
-                    <span>Deploy เป็น Web App เพื่อรองรับการบันทึกข้อมูล (Write/Update)</span>
+                {/* Step 2: Apps Script Code & Deploy */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-cyan-500/30 space-y-3">
+                  <div className="font-bold text-white text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-cyan-500 text-slate-950 flex items-center justify-center font-mono font-black text-xs">
+                        2
+                      </span>
+                      <span className="text-cyan-200">ติดตั้งโค้ด Code.gs & ทำให้ใช้งานได้เป็น Web App (Execute as: Anyone)</span>
+                    </div>
+                    <button
+                      onClick={copyScript}
+                      className="px-2.5 py-1 rounded bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/40 text-[11px] font-semibold flex items-center gap-1 transition"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>{copiedSnippet ? 'คัดลอกโค้ดแล้ว!' : 'คัดลอก Code.gs'}</span>
+                    </button>
                   </div>
-                  <ol className="list-decimal list-inside space-y-1 text-slate-300 text-[11px] pl-2 leading-relaxed">
-                    <li>บนชีต ไปที่เมนู <b>"ส่วนขยาย (Extensions)"</b> ➜ <b>"Apps Script"</b></li>
-                    <li>ลบโค้ดเดิมทั้งหมด แล้ววางโค้ดจากแท็บ <b>"4. โค้ด Code.gs"</b> ลงไปแทน แล้วกด Save</li>
-                    <li>กดปุ่ม <b>"ทำให้ใช้งานได้ (Deploy)"</b> ➜ <b>"การทำให้ใช้งานได้รายการใหม่ (New deployment)"</b></li>
-                    <li>เลือกประเภทเป็น <b>"เว็บแอป (Web app)"</b></li>
+                  <ol className="list-decimal list-inside space-y-1.5 text-slate-300 text-xs pl-2 leading-relaxed">
+                    <li>ใน Google Sheet ไปที่เมนูด้านบน <b>"ส่วนขยาย (Extensions)"</b> ➜ <b>"Apps Script"</b></li>
+                    <li>ในหน้าต่างสคริปต์ ให้ลบโค้ดเริ่มต้นทั้งหมด แล้ววางโค้ดจากปุ่ม <b>"คัดลอก Code.gs"</b> หรือแท็บ <b>"4. โค้ด Code.gs"</b> ลงไป</li>
+                    <li>กดปุ่มบันทึก (ไอคอนแผ่นดิสก์ หรือ Ctrl+S)</li>
                     <li>
-                      <b className="text-amber-300">ตั้งค่าสำคัญ 2 จุด:</b>
-                      <ul className="list-disc list-inside pl-4 mt-0.5 space-y-0.5 text-slate-300">
-                        <li>ดำเนินการในฐานะ (Execute as): <b className="text-white">"ฉัน (Me)"</b></li>
-                        <li>ผู้ที่มีสิทธิ์เข้าถึง (Who has access): <b className="text-emerald-400">"ทุกคน (Anyone)"</b> <span className="text-rose-400">(สำคัญที่สุด ห้ามเลือก Only myself)</span></li>
-                      </ul>
+                      คลิกปุ่มสีน้ำเงิน <b>"ทำให้ใช้งานได้ (Deploy)"</b> ➜ เลือก <b>"การทำให้ใช้งานได้รายการใหม่ (New deployment)"</b>
                     </li>
-                    <li>กด <b>"ทำให้ใช้งานได้ (Deploy)"</b> ➜ กดยอมรับสิทธิ์ (Authorize access) ➜ Advanced ➜ Go to Script (Unsafe) ➜ Allow</li>
-                    <li>คัดลอก <b>Web App URL</b> นำมาวางในช่อง <i>Google Apps Script (GAS) Web App Deployment URL</i> ได้ทันที!</li>
+                    <li>
+                      คลิกรูปฟันเฟือง ⚙️ ด้านซ้าย เลือก <b>"เว็บแอป (Web app)"</b>
+                    </li>
+                    <li>
+                      <div className="my-1 ml-4 p-2.5 rounded-lg bg-amber-950/40 border border-amber-500/50 text-[11px] space-y-1">
+                        <div className="font-bold text-amber-200">⚠️ จุดสำคัญที่สุดสำหรับการปลดล็อคแบบ Full (ต้องตั้งตามนี้เท่านั้น):</div>
+                        <div>• ดำเนินการในฐานะ (Execute as): <b className="text-white">"ฉัน (Me)"</b></div>
+                        <div>• ผู้ที่มีสิทธิ์เข้าถึง (Who has access): <b className="text-emerald-400">"ทุกคน (Anyone)"</b> <span className="text-rose-400 font-bold">(ห้ามเลือก Only myself เด็ดขาด)</span></div>
+                      </div>
+                    </li>
+                    <li>
+                      กด <b>"ทำให้ใช้งานได้ (Deploy)"</b> ➜ กดยอมรับสิทธิ์ (Authorize access) ➜ เลือกบัญชี Google ของท่าน ➜ คลิก <i>Advanced (ขั้นสูง)</i> ➜ คลิก <i>Go to Script (ไปที่สคริปต์ที่ไม่ปลอดภัย)</i> ➜ กด <b>Allow (อนุญาต)</b>
+                    </li>
+                    <li>คัดลอก <b>"URL เว็บแอป (Web App URL)"</b> ที่ขึ้นต้นด้วย <code>https://script.google.com/macros/s/.../exec</code></li>
                   </ol>
+                </div>
+
+                {/* Step 3: Connect & Test Web App */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/30 space-y-3">
+                  <div className="font-bold text-white text-xs flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-mono font-black text-xs">
+                      3
+                    </span>
+                    <span className="text-emerald-200">นำ Web App URL มาใส่ในแดชบอร์ด & ตรวจสอบสถานะ</span>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <p className="text-slate-300">
+                      นำ Web App URL ที่ได้จากขั้นตอนที่ 2 มาวางลงในช่องด้านล่างนี้ แล้วกดปุ่ม <b>"บันทึกและทดสอบ"</b>:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        type="text"
+                        value={gasUrlInput}
+                        onChange={(e) => setGasUrlInput(e.target.value)}
+                        placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+                        className="flex-1 min-w-[260px] bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-xs focus:border-cyan-500 outline-none"
+                      />
+                      <button
+                        onClick={handleSave}
+                        className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>บันทึกการตั้งค่า</span>
+                      </button>
+                      <button
+                        onClick={handleRunTest}
+                        disabled={isTesting}
+                        className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs font-semibold transition flex items-center gap-1.5"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isTesting ? 'animate-spin' : ''}`} />
+                        <span>{isTesting ? 'กำลังทดสอบ...' : 'ทดสอบสิทธิ์'}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
