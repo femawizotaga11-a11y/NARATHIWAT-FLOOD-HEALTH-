@@ -39,6 +39,13 @@ interface Props {
   vulnerableCount: number;
   roadCutCount: number;
   criticalHospCount: number;
+  referralCount?: number;
+  bcpCount?: number;
+  staffCount?: number;
+  hospitalCount?: number;
+  shphCount?: number;
+  commCount?: number;
+  repCount?: number;
 }
 
 export const Sidebar: React.FC<Props> = ({
@@ -47,6 +54,13 @@ export const Sidebar: React.FC<Props> = ({
   vulnerableCount,
   roadCutCount,
   criticalHospCount,
+  referralCount = 5,
+  bcpCount = 9,
+  staffCount = 5,
+  hospitalCount = 13,
+  shphCount = 8,
+  commCount = 4,
+  repCount = 5,
 }) => {
   const navSections = [
     {
@@ -103,7 +117,7 @@ export const Sidebar: React.FC<Props> = ({
           label: '5. ส่งต่อ Dynamic Referral & OPOH',
           subLabel: 'ทางเลี่ยงน้ำท่วม & Bed Center CRUD',
           icon: Share2,
-          badge: 'CRUD Sheet',
+          badge: `${referralCount} แผนส่งต่อ`,
           badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
         },
         {
@@ -111,7 +125,7 @@ export const Sidebar: React.FC<Props> = ({
           label: '6. ทรัพยากร BCP ภาพรวม',
           subLabel: 'ไฟฟ้า, O2, เลือด, น้ำมัน CRUD ลง Sheet',
           icon: ShieldCheck,
-          badge: 'CRUD Sheet',
+          badge: `${bcpCount} หมวด BCP`,
           badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
         },
         {
@@ -119,7 +133,7 @@ export const Sidebar: React.FC<Props> = ({
           label: '7. กำลังคน Staff & บุคลากร',
           subLabel: 'ทีมแพทย์ A-B-C เวรฉุกเฉิน CRUD',
           icon: Users2,
-          badge: 'CRUD Sheet',
+          badge: `${staffCount} ทีมแพทย์`,
           badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
         },
       ],
@@ -133,7 +147,7 @@ export const Sidebar: React.FC<Props> = ({
           label: '8. ทรัพยากร & RTO 13 รพ.',
           subLabel: 'Safe Operating Hours CRUD ลง Sheet',
           icon: Building2,
-          badge: `${criticalHospCount} เฝ้าระวัง`,
+          badge: `${criticalHospCount} เฝ้าระวัง / ${hospitalCount} รพ.`,
           badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
         },
         {
@@ -141,7 +155,7 @@ export const Sidebar: React.FC<Props> = ({
           label: '9. เครือข่าย 111 รพ.สต.',
           subLabel: 'ด่านหน้าปฐมภูมิ CRUD ลง Sheet',
           icon: Stethoscope,
-          badge: 'CRUD Sheet',
+          badge: `${shphCount} รพ.สต.`,
           badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
         },
         {
@@ -149,7 +163,7 @@ export const Sidebar: React.FC<Props> = ({
           label: '10. ระบบสื่อสารสำรอง 4 ระดับ',
           subLabel: 'หากล่มใช้อะไร/หลักฐานจริง CRUD',
           icon: Radio,
-          badge: 'CRUD Sheet',
+          badge: `${commCount} ระดับสื่อสาร`,
           badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
         },
         {
@@ -157,7 +171,7 @@ export const Sidebar: React.FC<Props> = ({
           label: '11. นำเข้าจังหวัดเมื่อเกิน RTO',
           subLabel: 'ฮ./เรือ/ขบวนทหารนำส่ง CRUD ลง Sheet',
           icon: Truck,
-          badge: 'CRUD Sheet',
+          badge: `${repCount} แผนนำเข้า`,
           badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
         },
         {

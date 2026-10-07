@@ -520,6 +520,13 @@ export default function App() {
           vulnerableCount={patients.length}
           roadCutCount={roadCuts.length}
           criticalHospCount={criticalHospCount}
+          referralCount={referralRoutes.length}
+          bcpCount={bcpItems.length}
+          staffCount={staffTeams.length}
+          hospitalCount={hospitals.length}
+          shphCount={shphList.length}
+          commCount={communicationLayers.length}
+          repCount={replenishmentPlans.length}
         />
 
         {/* Right Active View Content Area */}
@@ -534,6 +541,12 @@ export default function App() {
                 roadCuts={roadCuts}
                 waterStations={waterStations}
                 patients={patients}
+                referrals={referralRoutes}
+                bcpItems={bcpItems}
+                staffTeams={staffTeams}
+                shphList={shphList}
+                communicationLayers={communicationLayers}
+                replenishmentPlans={replenishmentPlans}
                 onNavigate={(tab) => {
                   if (tab === 'gas_sync') {
                     setIsSheetModalOpen(true);

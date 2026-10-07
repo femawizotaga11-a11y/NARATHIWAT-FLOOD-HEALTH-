@@ -141,6 +141,8 @@ export const HospitalStatusView: React.FC<Props> = ({
       const newHosp: HospitalStatus = {
         ...(formData as HospitalStatus),
         id: `h-${Date.now()}`,
+        code: formData.code || `REG-HOS-${String(hospitals.length + 1).padStart(3, '0')}`,
+        hospCode5Digit: formData.hospCode5Digit || '10xxx',
       };
       onAddHospital(newHosp);
     }
@@ -191,6 +193,14 @@ export const HospitalStatusView: React.FC<Props> = ({
           <p className="text-xs text-slate-400 mt-0.5">
             เชื่อมต่อข้อมูลชีตแท็บ: <code className="text-cyan-300 font-mono">HospitalStatus</code> (Google Sheet ID: 13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY)
           </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-500/50 font-mono font-bold">
+              ทะเบียน: REG-HOS-001 ~ REG-HOS-013 (13 โรงพยาบาล รหัส 5 หลัก สธ.)
+            </span>
+            <span className="text-slate-400">
+              ➔ สอดคล้องเตียงว่าง {hospitals.reduce((s, h) => s + (h.bedTotal - h.bedOccupied), 0)} / {hospitals.reduce((s, h) => s + h.bedTotal, 0)} เตียง • ผู้ป่วยฟอกไต {hospitals.reduce((s, h) => s + (h.dialysisPatientsCount || 0), 0)} ราย • Home O2 {hospitals.reduce((s, h) => s + (h.homeOxygenPatientsCount || 0), 0)} ราย (ตรงกับข้อ 4)
+            </span>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -322,8 +332,19 @@ export const HospitalStatusView: React.FC<Props> = ({
                     }`}
                   >
                     <td className="py-2.5 px-3">
-                      <div className="font-semibold text-sky-200">{h.name}</div>
-                      <div className="text-[10px] text-slate-400">อ.{h.district}</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-sky-200">{h.name}</span>
+                        {h.code && (
+                          <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-800 text-amber-300 font-mono">
+                            {h.code}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
+                        <span>อ.{h.district}</span>
+                        {h.hospCode5Digit && <span>• รหัส สธ. {h.hospCode5Digit}</span>}
+                        <span>• เตียง {h.bedOccupied}/{h.bedTotal}</span>
+                      </div>
                     </td>
                     <td className="py-2.5 px-2 text-center">
                       <span

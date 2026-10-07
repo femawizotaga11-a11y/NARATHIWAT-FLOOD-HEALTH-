@@ -95,6 +95,7 @@ export const ShphNetworkView: React.FC<Props> = ({
       const newItem: ShphItem = {
         ...(formData as ShphItem),
         id: `shph-${Date.now()}`,
+        code: formData.code || `REG-SHP-${String(shphList.length + 1).padStart(3, '0')}`,
       };
       onAddShph(newItem);
     }
@@ -120,6 +121,14 @@ export const ShphNetworkView: React.FC<Props> = ({
           <p className="text-xs text-slate-400 mt-0.5">
             เชื่อมต่อข้อมูลชีตแท็บ: <code className="text-cyan-300 font-mono">ShphNetwork</code> (Google Sheet ID: 13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY)
           </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded bg-orange-950/80 text-orange-300 border border-orange-500/50 font-mono font-bold">
+              ทะเบียน: REG-SHP-001 ~ REG-SHP-008 ({shphList.length} รพ.สต. ในพื้นที่เสี่ยง)
+            </span>
+            <span className="text-slate-400">
+              ➔ ดูแลผู้ป่วยเปราะบางในพื้นที่เสี่ยง {shphList.reduce((acc, s) => acc + (s.vulnerableCovered || 0), 0)} ราย (สอดคล้องตรงกับข้อ 4) • เชื่อม รพ. แม่ข่าย (ข้อ 8)
+            </span>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -206,7 +215,14 @@ export const ShphNetworkView: React.FC<Props> = ({
               {filtered.map((s) => (
                 <tr key={s.id} className="hover:bg-slate-800/40 transition">
                   <td className="py-2.5 px-3 font-semibold text-sky-200">
-                    <div>{s.name}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span>{s.name}</span>
+                      {s.code && (
+                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-800 text-orange-300 font-mono">
+                          {s.code}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
                       <Phone className="w-3 h-3 text-cyan-400" />
                       <span>{s.phone}</span>

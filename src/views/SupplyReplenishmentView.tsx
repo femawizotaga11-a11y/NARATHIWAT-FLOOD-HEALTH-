@@ -100,6 +100,7 @@ export const SupplyReplenishmentView: React.FC<Props> = ({
     } else {
       const newPlan: ReplenishmentPlan = {
         id: `rep-${Date.now()}`,
+        code: formData.code || `REG-REP-${String(plans.length + 1).padStart(3, '0')}`,
         resourceCategory: formData.resourceCategory as any,
         triggerThreshold: formData.triggerThreshold || 'สำรองคงเหลือ < 24 ชม.',
         primaryInboundRoute: formData.primaryInboundRoute || '-',
@@ -134,6 +135,14 @@ export const SupplyReplenishmentView: React.FC<Props> = ({
           <p className="text-xs text-slate-400 mt-0.5">
             ขั้นตอนปฏิบัติการนำเข้าน้ำมันเชื้อเพลิง, ออกซิเจนการแพทย์, เลือด, ยาและเวชภัณฑ์ จากภายนอกจังหวัดนราธิวาส (เขตสุขภาพที่ 12)
           </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-500/50 font-mono font-bold">
+              ทะเบียน: REG-REP-001 ~ REG-REP-005 ({plans.length} แผนส่งกำลังบำรุง)
+            </span>
+            <span className="text-slate-400">
+              ➔ รองรับโรงพยาบาลที่ RTO วิกฤต (ข้อ 8: รพ.สุไหงโก-ลก 24 ชม., แว้ง 36 ชม.) • สอดคล้องทรัพยากร BCP (ข้อ 6: REG-BCP-xxx)
+            </span>
+          </div>
         </div>
 
         {/* Sheet Actions & Add */}
@@ -275,6 +284,11 @@ export const SupplyReplenishmentView: React.FC<Props> = ({
                 <div className="font-bold text-white text-sm flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-cyan-400" />
                   <span>{plan.resourceCategory}</span>
+                  {plan.code && (
+                    <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-800 text-amber-300 font-mono font-normal">
+                      {plan.code}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">

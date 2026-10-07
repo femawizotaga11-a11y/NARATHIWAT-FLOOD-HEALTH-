@@ -100,6 +100,7 @@ export const StaffManagementView: React.FC<Props> = ({
       const newTeam: StaffTeamItem = {
         ...(formData as StaffTeamItem),
         id: `st-${Date.now()}`,
+        code: formData.code || `REG-STF-${String(staffTeams.length + 1).padStart(3, '0')}`,
       };
       onAddStaffTeam(newTeam);
     }
@@ -125,6 +126,14 @@ export const StaffManagementView: React.FC<Props> = ({
           <p className="text-xs text-slate-400 mt-0.5">
             เชื่อมต่อข้อมูลชีตแท็บ: <code className="text-cyan-300 font-mono">StaffRoster</code> (Google Sheet ID: 13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY)
           </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded bg-teal-950/80 text-teal-300 border border-teal-500/50 font-mono font-bold">
+              ทะเบียน: REG-STF-001 ~ REG-STF-005 ({staffTeams.length} ทีมปฏิบัติการฉุกเฉิน)
+            </span>
+            <span className="text-slate-400">
+              ➔ เชื่อมโยงบัญชีกำลังคน 13 รพ. (ข้อ 8: แพทย์ {totalDoctors} ท่าน, พยาบาล {totalNurses} คน, กู้ชีพ {totalEmt} คน รวม {totalDoctors + totalNurses + totalEmt} คน)
+            </span>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -241,7 +250,14 @@ export const StaffManagementView: React.FC<Props> = ({
               {filteredTeams.map((t) => (
                 <tr key={t.id} className="hover:bg-slate-800/40 transition">
                   <td className="py-2.5 px-3 font-semibold text-white">
-                    <div>{t.teamName}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span>{t.teamName}</span>
+                      {t.code && (
+                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-800 text-teal-300 font-mono">
+                          {t.code}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[10px] text-cyan-300 font-normal">{t.department}</div>
                   </td>
                   <td className="py-2.5 px-3">

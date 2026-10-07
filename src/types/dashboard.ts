@@ -24,6 +24,8 @@ export type ServiceStatus = 'active' | 'partial' | 'closed';
 
 export interface HospitalStatus {
   id: string;
+  code?: string; // รหัสทะเบียนสถานพยาบาล เช่น REG-HOS-001
+  hospCode5Digit?: string; // รหัส 5 หลัก สธ. เช่น 10672
   name: string;
   type: 'A+' | 'S+' | 'M' | 'S';
   district: string;
@@ -150,6 +152,8 @@ export interface LiveWeatherData {
 }
 
 export interface CommunicationLayer {
+  id?: string;
+  code?: string; // e.g. REG-COM-001 ถึง REG-COM-004
   level: number;
   name: string;
   type: string;
@@ -161,12 +165,17 @@ export interface CommunicationLayer {
   failoverCondition: string;
   status: 'พร้อมใช้งาน' | 'เปิดใช้งานแล้ว' | 'ขัดข้อง';
   evidenceDocument: string;
+  connectedHospitalCount?: number;
 }
 
 export interface ReplenishmentPlan {
   id: string;
+  code?: string; // e.g. REG-REP-001
   resourceCategory: 'น้ำมันเชื้อเพลิง (Fuel)' | 'ออกซิเจนทางการแพทย์ (O2)' | 'ยาและเวชภัณฑ์จำเป็น' | 'โลหิตสำรอง' | 'น้ำดื่ม/เสบียงอาหาร';
   triggerThreshold: string; // e.g. "สำรองคงเหลือ < 24 ชม."
+  targetHospitalCode?: string; // e.g. REG-HOS-002
+  targetHospitalName?: string; // e.g. รพ.สุไหงโก-ลก
+  linkedBcpCode?: string; // e.g. REG-BCP-001
   primaryInboundRoute: string;
   backupInboundRoute: string;
   transportMode: 'อากาศยาน (ฮ.)' | 'ขบวนรถ 4WD ยกสูง + ทหารนำขบวน' | 'เรือลำเลียง กองทัพเรือ/ปภ.' | 'ศูนย์สุขภาพที่ 12 สงขลา';
@@ -178,6 +187,8 @@ export interface ReplenishmentPlan {
 
 export interface ShphItem {
   id: string;
+  code?: string; // e.g. REG-SHP-001
+  mainHospitalCode?: string; // e.g. REG-HOS-002
   name: string;
   district: string;
   subdistrict: string;
@@ -191,6 +202,8 @@ export interface ShphItem {
 
 export interface StaffTeamItem {
   id: string;
+  code?: string; // e.g. REG-STF-001
+  hospitalCode?: string; // e.g. REG-HOS-001
   hospitalName: string;
   district: string;
   department: string;
@@ -206,6 +219,10 @@ export interface StaffTeamItem {
 
 export interface BcpResourceItem {
   id: string;
+  code?: string; // e.g. REG-BCP-001
+  category?: string; // หมวด BCP เช่น ไฟฟ้า, ออกซิเจน, เลือด, น้ำมัน
+  criticalHospitalCode?: string; // e.g. REG-HOS-002
+  linkedReplenishmentCode?: string; // e.g. REG-REP-001
   title: string;
   duration: string;
   status: 'พร้อม' | 'เฝ้าระวัง' | 'เสี่ยงขาด' | 'วิกฤต';
@@ -217,6 +234,9 @@ export interface BcpResourceItem {
 
 export interface ReferralRouteItem {
   id: string;
+  code?: string; // e.g. REG-REF-001
+  originHospitalCode?: string; // e.g. REG-HOS-002
+  destinationHospitalCode?: string; // e.g. REG-HOS-001
   originHospital: string;
   destinationHospital: string;
   routeType: 'ทางบก' | 'ทางน้ำ' | 'ทางอากาศ';

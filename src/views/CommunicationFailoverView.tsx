@@ -82,9 +82,12 @@ export const CommunicationFailoverView: React.FC<Props> = ({
         ...(formData as CommunicationLayer),
       });
     } else {
+      const levelNum = Number(formData.level) || communicationLayers.length + 1;
       const newLayer: CommunicationLayer = {
         ...(formData as CommunicationLayer),
-        level: Number(formData.level) || communicationLayers.length + 1,
+        id: `com-${Date.now()}`,
+        level: levelNum,
+        code: formData.code || `REG-COM-${String(levelNum).padStart(3, '0')}`,
       } as CommunicationLayer;
       onAddLayer(newLayer);
     }
@@ -110,6 +113,14 @@ export const CommunicationFailoverView: React.FC<Props> = ({
           <p className="text-xs text-slate-400 mt-0.5">
             เชื่อมต่อข้อมูลชีตแท็บ: <code className="text-cyan-300 font-mono">CommunicationLayers</code> (Google Sheet ID: 13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY)
           </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/50 font-mono font-bold">
+              ทะเบียน: REG-COM-001 ~ REG-COM-004 ({communicationLayers.length} ระดับสื่อสารสำรอง)
+            </span>
+            <span className="text-slate-400">
+              ➔ ครอบคลุม 13 โรงพยาบาล (ข้อ 8: REG-HOS-001~013) และ สสจ. นราธิวาส 100%
+            </span>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -187,7 +198,14 @@ export const CommunicationFailoverView: React.FC<Props> = ({
 
                     <div>
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <span>ระดับที่ {layer.level}: {layer.name}</span>
+                        <span className="flex items-center gap-1.5">
+                          <span>ระดับที่ {layer.level}: {layer.name}</span>
+                          {layer.code && (
+                            <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-800 text-purple-300 font-mono">
+                              {layer.code}
+                            </span>
+                          )}
+                        </span>
                         {isPrimary && (
                           <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded">
                             หลัก

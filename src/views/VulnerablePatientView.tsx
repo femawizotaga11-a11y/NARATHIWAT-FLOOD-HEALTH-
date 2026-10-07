@@ -152,7 +152,7 @@ export const VulnerablePatientView: React.FC<Props> = ({
       const newPatient: VulnerablePatient = {
         ...(formData as VulnerablePatient),
         id: `pat-${Date.now()}`,
-        code: `NRT-VUL-${String(patients.length + 1).padStart(3, '0')}`,
+        code: formData.code || `REG-VUL-${String(patients.length + 1).padStart(3, '0')}`,
         lastUpdated: 'สร้างใหม่เมื่อสักครู่',
       };
       onAddPatient(newPatient);
@@ -278,6 +278,14 @@ export const VulnerablePatientView: React.FC<Props> = ({
           <p className="text-xs text-slate-400 mt-0.5">
             ระบบบริหารรายชื่อ ที่อยู่ เบอร์โทรติดต่อ แผนอพยพด่วน (EVAC ก่อนน้ำท่วม) เชื่อมโยงกับ Google Sheet ID: <code className="text-cyan-300">13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY</code>
           </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded bg-pink-950/80 text-pink-300 border border-pink-500/50 font-mono font-bold">
+              ทะเบียน: REG-VUL-001 ~ REG-VUL-014 ({patients.length} รายการในระบบ / รวม 1,284 ราย 13 อำเภอ)
+            </span>
+            <span className="text-slate-400">
+              ➔ เชื่อมโยง รพ.รับส่งต่อ 13 แห่ง (ข้อ 8: REG-HOS-xxx) และ รพ.สต.ดูแล (ข้อ 9: REG-SHP-xxx)
+            </span>
+          </div>
         </div>
 
         {/* Action Buttons */}

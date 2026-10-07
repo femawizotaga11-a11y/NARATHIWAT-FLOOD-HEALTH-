@@ -81,6 +81,7 @@ export const BcpResourcesView: React.FC<Props> = ({
       const newItem: BcpResourceItem = {
         ...(formData as BcpResourceItem),
         id: `bcp-${Date.now()}`,
+        code: formData.code || `REG-BCP-${String(bcpItems.length + 1).padStart(3, '0')}`,
       };
       onAddBcpItem(newItem);
     }
@@ -106,6 +107,14 @@ export const BcpResourcesView: React.FC<Props> = ({
           <p className="text-xs text-slate-400 mt-0.5">
             เชื่อมต่อข้อมูลชีตแท็บ: <code className="text-cyan-300 font-mono">BcpResources</code> (Google Sheet ID: 13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY)
           </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-500/50 font-mono font-bold">
+              ทะเบียน: REG-BCP-001 ~ REG-BCP-009 ({bcpItems.length} หมวดทรัพยากร)
+            </span>
+            <span className="text-slate-400">
+              ➔ เชื่อมโยงขีดความสามารถ 13 รพ. (ข้อ 8: ไฟฟ้า 72 ชม., O2 48 ชม.) และแผนส่งกำลังบำรุงนำเข้า (ข้อ 11: REG-REP-xxx)
+            </span>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -157,7 +166,14 @@ export const BcpResourcesView: React.FC<Props> = ({
             >
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <h3 className="text-sm font-bold text-white">{item.title}</h3>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="text-sm font-bold text-white">{item.title}</h3>
+                    {item.code && (
+                      <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-800 text-blue-300 font-mono">
+                        {item.code}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs font-mono font-bold text-cyan-300 mt-0.5">
                     {item.duration}
                   </div>

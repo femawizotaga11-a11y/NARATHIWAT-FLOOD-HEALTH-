@@ -712,17 +712,20 @@ function doGet(e) {
       for (var r = 1; r < rData.length; r++) {
         var rRow = rData[r];
         if (rRow[0]) {
+          var hasCode = String(rRow[0]).indexOf('REG-') === 0;
+          var offset = hasCode ? 1 : 0;
           referrals.push({
             id: 'gas-ref-' + r,
-            originHospital: String(rRow[0] || ''),
-            destinationHospital: String(rRow[1] || ''),
-            routeType: String(rRow[2] || 'ทางบก'),
-            primaryPath: String(rRow[3] || ''),
-            bypassPath: String(rRow[4] || ''),
-            estimatedMinutes: Number(rRow[5]) || 60,
-            safetyStatus: String(rRow[6] || 'พร้อมใช้'),
-            vehicleNeeded: String(rRow[7] || ''),
-            availableBeds: Number(rRow[8]) || 0
+            code: hasCode ? String(rRow[0]) : ('REG-REF-' + ('00' + r).slice(-3)),
+            originHospital: String(rRow[offset] || ''),
+            destinationHospital: String(rRow[offset + 1] || ''),
+            routeType: String(rRow[offset + 2] || 'ทางบก'),
+            primaryPath: String(rRow[offset + 3] || ''),
+            bypassPath: String(rRow[offset + 4] || ''),
+            estimatedMinutes: Number(rRow[offset + 5]) || 60,
+            safetyStatus: String(rRow[offset + 6] || 'พร้อมใช้'),
+            vehicleNeeded: String(rRow[offset + 7] || ''),
+            availableBeds: Number(rRow[offset + 8]) || 0
           });
         }
       }
@@ -737,15 +740,18 @@ function doGet(e) {
       for (var b = 1; b < bData.length; b++) {
         var bRow = bData[b];
         if (bRow[0]) {
+          var hasCode = String(bRow[0]).indexOf('REG-') === 0;
+          var offset = hasCode ? 1 : 0;
           bcpList.push({
             id: 'gas-bcp-' + b,
-            title: String(bRow[0] || ''),
-            duration: String(bRow[1] || ''),
-            status: String(bRow[2] || 'พร้อม'),
-            statusType: String(bRow[3] || 'success'),
-            detail: String(bRow[4] || ''),
-            contingencyPlan: String(bRow[5] || ''),
-            lastChecked: String(bRow[6] || '')
+            code: hasCode ? String(bRow[0]) : ('REG-BCP-' + ('00' + b).slice(-3)),
+            title: String(bRow[offset] || ''),
+            duration: String(bRow[offset + 1] || ''),
+            status: String(bRow[offset + 2] || 'พร้อม'),
+            statusType: String(bRow[offset + 3] || 'success'),
+            detail: String(bRow[offset + 4] || ''),
+            contingencyPlan: String(bRow[offset + 5] || ''),
+            lastChecked: String(bRow[offset + 6] || '')
           });
         }
       }
@@ -760,19 +766,22 @@ function doGet(e) {
       for (var s = 1; s < stData.length; s++) {
         var sRow = stData[s];
         if (sRow[0]) {
+          var hasCode = String(sRow[0]).indexOf('REG-') === 0;
+          var offset = hasCode ? 1 : 0;
           staffList.push({
             id: 'gas-st-' + s,
-            hospitalName: String(sRow[0] || ''),
-            district: String(sRow[1] || ''),
-            department: String(sRow[2] || ''),
-            teamName: String(sRow[3] || ''),
-            currentShift: String(sRow[4] || 'ทีม A'),
-            doctorCount: Number(sRow[5]) || 0,
-            nurseCount: Number(sRow[6]) || 0,
-            emtCount: Number(sRow[7]) || 0,
-            readinessPct: Number(sRow[8]) || 85,
-            leaderName: String(sRow[9] || ''),
-            contactPhone: String(sRow[10] || '')
+            code: hasCode ? String(sRow[0]) : ('REG-STF-' + ('00' + s).slice(-3)),
+            teamName: hasCode ? String(sRow[1] || '') : String(sRow[3] || ''),
+            hospitalName: hasCode ? String(sRow[2] || '') : String(sRow[0] || ''),
+            district: hasCode ? String(sRow[3] || '') : String(sRow[1] || ''),
+            department: hasCode ? String(sRow[4] || '') : String(sRow[2] || ''),
+            currentShift: hasCode ? String(sRow[5] || 'ทีม A') : String(sRow[4] || 'ทีม A'),
+            doctorCount: Number(sRow[hasCode ? 6 : 5]) || 0,
+            nurseCount: Number(sRow[hasCode ? 7 : 6]) || 0,
+            emtCount: Number(sRow[hasCode ? 8 : 7]) || 0,
+            readinessPct: Number(sRow[hasCode ? 9 : 8]) || 85,
+            leaderName: String(sRow[hasCode ? 10 : 9] || ''),
+            contactPhone: String(sRow[hasCode ? 11 : 10] || '')
           });
         }
       }
@@ -787,31 +796,35 @@ function doGet(e) {
       for (var j = 1; j < hData.length; j++) {
         var hRow = hData[j];
         if (hRow[0]) {
+          var hasCode = String(hRow[0]).indexOf('REG-') === 0;
+          var offset = hasCode ? 2 : 0;
           hospitals.push({
             id: 'gas-hosp-' + j,
-            name: String(hRow[0] || ''),
-            type: String(hRow[1] || 'M'),
-            district: String(hRow[2] || ''),
-            riskLevel: String(hRow[3] || 'warning'),
-            er: String(hRow[4] || 'active'),
-            lr: String(hRow[5] || 'active'),
-            or: String(hRow[6] || 'active'),
-            icu: String(hRow[7] || 'active'),
-            dialysis: String(hRow[8] || 'active'),
-            opdNcd: String(hRow[9] || 'active'),
-            autonomyHours: Number(hRow[10]) || 72,
-            fuelGeneratorHours: Number(hRow[11]) || 72,
-            oxygenHours: Number(hRow[12]) || 72,
-            waterHours: Number(hRow[13]) || 72,
-            bloodUnits: Number(hRow[14]) || 20,
-            bloodStatus: String(hRow[15] || 'เพียงพอ'),
-            doctorCount: Number(hRow[16]) || 5,
-            nurseCount: Number(hRow[17]) || 20,
-            emtCount: Number(hRow[18]) || 4,
-            staffReadinessPct: Number(hRow[19]) || 85,
-            bedTotal: Number(hRow[20]) || 60,
-            bedOccupied: Number(hRow[21]) || 40,
-            notes: String(hRow[22] || '')
+            code: hasCode ? String(hRow[0]) : ('REG-HOS-' + ('00' + j).slice(-3)),
+            hospCode5Digit: hasCode ? String(hRow[1]) : '',
+            name: String(hRow[offset] || ''),
+            type: String(hRow[offset + 1] || 'M'),
+            district: String(hRow[offset + 2] || ''),
+            riskLevel: String(hRow[offset + 3] || 'warning'),
+            er: String(hRow[offset + 4] || 'active'),
+            lr: String(hRow[offset + 5] || 'active'),
+            or: String(hRow[offset + 6] || 'active'),
+            icu: String(hRow[offset + 7] || 'active'),
+            dialysis: String(hRow[offset + 8] || 'active'),
+            opdNcd: String(hRow[offset + 9] || 'active'),
+            autonomyHours: Number(hRow[offset + 10]) || 72,
+            fuelGeneratorHours: Number(hRow[offset + 11]) || 72,
+            oxygenHours: Number(hRow[offset + 12]) || 72,
+            waterHours: Number(hRow[offset + 13]) || 72,
+            bloodUnits: Number(hRow[offset + 14]) || 20,
+            bloodStatus: String(hRow[offset + 15] || 'เพียงพอ'),
+            doctorCount: Number(hRow[offset + 16]) || 5,
+            nurseCount: Number(hRow[offset + 17]) || 20,
+            emtCount: Number(hRow[offset + 18]) || 4,
+            staffReadinessPct: Number(hRow[offset + 19]) || 85,
+            bedTotal: Number(hRow[offset + 20]) || 60,
+            bedOccupied: Number(hRow[offset + 21]) || 40,
+            notes: String(hRow[offset + 22] || '')
           });
         }
       }
@@ -826,17 +839,20 @@ function doGet(e) {
       for (var k = 1; k < shData.length; k++) {
         var kRow = shData[k];
         if (kRow[0]) {
+          var hasCode = String(kRow[0]).indexOf('REG-') === 0;
+          var offset = hasCode ? 1 : 0;
           shph.push({
             id: 'gas-shph-' + k,
-            name: String(kRow[0] || ''),
-            district: String(kRow[1] || ''),
-            subdistrict: String(kRow[2] || ''),
-            status: String(kRow[3] || 'ปกติ'),
-            totalStaff: Number(kRow[4]) || 5,
-            phone: String(kRow[5] || ''),
-            vulnerableCovered: Number(kRow[6]) || 20,
-            riskLevel: String(kRow[7] || 'เขียว'),
-            contingencyPlan: String(kRow[8] || '')
+            code: hasCode ? String(kRow[0]) : ('REG-SHP-' + ('00' + k).slice(-3)),
+            name: String(kRow[offset] || ''),
+            district: String(kRow[offset + 1] || ''),
+            subdistrict: String(kRow[offset + 2] || ''),
+            status: String(kRow[offset + 3] || 'ปกติ'),
+            totalStaff: Number(kRow[offset + 4]) || 5,
+            phone: String(kRow[offset + 5] || ''),
+            vulnerableCovered: Number(kRow[offset + 6]) || 20,
+            riskLevel: String(kRow[offset + 7] || 'เขียว'),
+            contingencyPlan: String(kRow[offset + 8] || '')
           });
         }
       }
@@ -851,18 +867,22 @@ function doGet(e) {
       for (var c = 1; c < cData.length; c++) {
         var cRow = cData[c];
         if (cRow[0] !== '') {
+          var hasCode = String(cRow[0]).indexOf('REG-') === 0;
+          var offset = hasCode ? 1 : 0;
           comms.push({
-            level: Number(cRow[0]) || c,
-            name: String(cRow[1] || ''),
-            type: String(cRow[2] || ''),
-            primaryChannel: String(cRow[3] || ''),
-            equipment: String(cRow[4] || ''),
-            coverage: String(cRow[5] || ''),
-            responsibleOfficer: String(cRow[6] || ''),
-            contact: String(cRow[7] || ''),
-            failoverCondition: String(cRow[8] || ''),
-            status: String(cRow[9] || 'พร้อมใช้งาน'),
-            evidenceDocument: String(cRow[10] || '')
+            id: 'gas-com-' + c,
+            code: hasCode ? String(cRow[0]) : ('REG-COM-' + ('00' + c).slice(-3)),
+            level: Number(cRow[offset]) || c,
+            name: String(cRow[offset + 1] || ''),
+            type: String(cRow[offset + 2] || ''),
+            primaryChannel: String(cRow[offset + 3] || ''),
+            equipment: String(cRow[offset + 4] || ''),
+            coverage: String(cRow[offset + 5] || ''),
+            responsibleOfficer: String(cRow[offset + 6] || ''),
+            contact: String(cRow[offset + 7] || ''),
+            failoverCondition: String(cRow[offset + 8] || ''),
+            status: String(cRow[offset + 9] || 'พร้อมใช้งาน'),
+            evidenceDocument: String(cRow[offset + 10] || '')
           });
         }
       }
@@ -877,18 +897,25 @@ function doGet(e) {
       for (var p = 1; p < rpData.length; p++) {
         var pRow = rpData[p];
         if (pRow[0]) {
+          var hasCode = String(pRow[0]).indexOf('REG-') === 0;
+          var offset = hasCode ? 1 : 0;
           repPlans.push({
             id: 'gas-rep-' + p,
-            resourceCategory: String(pRow[0] || ''),
-            triggerThreshold: String(pRow[1] || ''),
-            primaryInboundRoute: String(pRow[2] || ''),
-            backupInboundRoute: String(pRow[3] || ''),
-            transportMode: String(pRow[4] || ''),
-            supplyHubOrigin: String(pRow[5] || ''),
-            contactPerson: String(pRow[6] || ''),
-            slaHours: Number(pRow[7]) || 6,
-            status: String(pRow[8] || 'เตรียมพร้อมระดับ 2')
+            code: hasCode ? String(pRow[0]) : ('REG-REP-' + ('00' + p).slice(-3)),
+            resourceCategory: String(pRow[offset] || ''),
+            triggerThreshold: String(pRow[offset + 1] || ''),
+            primaryInboundRoute: String(pRow[offset + 2] || ''),
+            backupInboundRoute: String(pRow[offset + 3] || ''),
+            transportMode: String(pRow[offset + 4] || ''),
+            supplyHubOrigin: String(pRow[offset + 5] || ''),
+            contactPerson: String(pRow[offset + 6] || ''),
+            slaHours: Number(pRow[offset + 7]) || 6,
+            status: String(pRow[offset + 8] || 'เตรียมพร้อมระดับ 2')
           });
+        }
+      }
+      return jsonResponse({ status: 'success', count: repPlans.length, data: repPlans });
+    }
         }
       }
       return jsonResponse({ status: 'success', count: repPlans.length, data: repPlans });

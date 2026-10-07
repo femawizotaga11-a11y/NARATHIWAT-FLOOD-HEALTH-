@@ -90,6 +90,7 @@ export const ReferralOpohView: React.FC<Props> = ({
       const newRoute: ReferralRouteItem = {
         ...(formData as ReferralRouteItem),
         id: `ref-${Date.now()}`,
+        code: formData.code || `REG-REF-${String(referralRoutes.length + 1).padStart(3, '0')}`,
       };
       onAddRoute(newRoute);
     }
@@ -115,6 +116,14 @@ export const ReferralOpohView: React.FC<Props> = ({
           <p className="text-xs text-slate-400 mt-0.5">
             เชื่อมต่อข้อมูลชีตแท็บ: <code className="text-cyan-300 font-mono">ReferralRoutes</code> (Google Sheet ID: 13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY)
           </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 font-mono font-bold">
+              ทะเบียน: REG-REF-001 ~ REG-REF-005 ({referralRoutes.length} เส้นทางส่งต่อ)
+            </span>
+            <span className="text-slate-400">
+              ➔ เชื่อมโยงเตียงว่างปลายทางตรงกับ 13 รพ. (ข้อ 8: REG-HOS-001 มีเตียงว่าง {mainHub ? mainHub.bedTotal - mainHub.bedOccupied : 52} เตียง)
+            </span>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -270,7 +279,17 @@ export const ReferralOpohView: React.FC<Props> = ({
               {referralRoutes.map((r) => (
                 <tr key={r.id} className="hover:bg-slate-800/40 transition">
                   <td className="py-2.5 px-3 font-semibold text-white">
-                    <div>{r.originHospital} ➔ {r.destinationHospital}</div>
+                    <div className="flex items-center gap-2">
+                      <span>{r.originHospital} ➔ {r.destinationHospital}</span>
+                      {r.code && (
+                        <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-800 text-cyan-300 font-mono">
+                          {r.code}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                      เตียงปลายทาง: <span className="text-emerald-300 font-bold">{r.availableBeds || 50} เตียง</span>
+                    </div>
                   </td>
                   <td className="py-2.5 px-2 text-center">
                     <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 font-medium">
