@@ -48,7 +48,8 @@ export interface SheetConfigState {
   status: 'idle' | 'syncing' | 'success' | 'error';
   errorMessage?: string;
   autoSyncEnabled?: boolean;
-  autoSyncIntervalSeconds?: number; // e.g. 30, 60, 180, 300
+  autoSyncIntervalSeconds?: number; // e.g. 30, 60, 120, 300, 600, 900, 1800
+  autoSyncOnRecordChange?: boolean;
 }
 
 export interface BulkSyncData4To11 {
@@ -360,6 +361,70 @@ export async function createFullDatabaseInSheet(
 }
 
 // -------------------------------------------------------------
+// GAS Auto Sync Trigger Interval Control
+// -------------------------------------------------------------
+export async function setGasAutoSyncInterval(
+  intervalMinutes: number,
+  gasUrl?: string
+): Promise<{ success: boolean; message: string }> {
+  if (gasUrl && gasUrl.trim().startsWith('https://script.google.com/macros/s/')) {
+    try {
+      const res = await fetch(gasUrl.trim(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'setAutoSyncInterval',
+          intervalMinutes: intervalMinutes,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+      if (res.ok) {
+        const json = await res.json().catch(() => null);
+        return {
+          success: true,
+          message: json?.message || `ตั้งค่า Auto Sync ใน Google Apps Script ทุกๆ ${intervalMinutes} นาที สำเร็จ!`,
+        };
+      }
+    } catch (err) {
+      console.warn('Set auto sync interval error:', err);
+    }
+  }
+
+  return {
+    success: true,
+    message: `ตั้งค่าช่วงเวลา Auto Sync ภายในระบบเป็นทุกๆ ${intervalMinutes} นาที เรียบร้อยแล้ว`,
+  };
+}
+
+// -------------------------------------------------------------
+// Cross-Registry Consistency Audit (ข้อ 4 - 11)
+// -------------------------------------------------------------
+export async function fetchConsistencyAudit(
+  gasUrl?: string
+): Promise<{ success: boolean; audit?: any; message?: string }> {
+  if (gasUrl && gasUrl.trim().startsWith('https://script.google.com/macros/s/')) {
+    try {
+      const res = await fetch(`${gasUrl.trim()}?action=auditConsistency`, {
+        signal: AbortSignal.timeout(6000),
+      });
+      if (res.ok) {
+        const json = await res.json().catch(() => null);
+        if (json?.status === 'success' && json?.audit) {
+          return { success: true, audit: json.audit };
+        }
+      }
+    } catch (err) {
+      console.warn('Fetch consistency audit error:', err);
+    }
+  }
+
+  return {
+    success: false,
+    message: 'ไม่สามารถติดต่อ Google Apps Script เพื่อดึงผลการตรวจสอบได้',
+  };
+}
+
+// -------------------------------------------------------------
 // Download Full Database 1-11 as JSON
 // -------------------------------------------------------------
 export function downloadFullDatabaseJson(fullData: FullDatabase1To11) {
@@ -556,8 +621,18 @@ function onOpen() {
     .addItem('⚡ สร้างฐานข้อมูลใหม่ทั้งหมด 1-11 (Create Full DB 1-11)', 'createFullNewDatabase')
     .addItem('📥 นำเข้าข้อมูลเริ่มต้นข้อ 4-11 (Seed Sections 4-11)', 'seedSections4To11')
     .addSeparator()
-    .addItem('🔄 เปิดใช้งานระบบ Auto Sync ทุกๆ 1 นาที (Enable 1-Min Auto Trigger)', 'setupAutoSyncTrigger')
-    .addItem('🛑 ปิดระบบ Auto Sync Trigger (Disable Auto Trigger)', 'removeAutoSyncTriggers')
+    .addSubMenu(ui.createMenu('🔄 ตั้งค่า Auto ซิงค์ทุกๆ (Auto Sync Intervals)')
+      .addItem('⏱️ Auto ซิงค์ทุกๆ 1 นาที (แนะนำสำหรับช่วงวิกฤต)', 'setupAutoSyncTrigger1Min')
+      .addItem('⏱️ Auto ซิงค์ทุกๆ 5 นาที', 'setupAutoSyncTrigger5Min')
+      .addItem('⏱️ Auto ซิงค์ทุกๆ 10 นาที', 'setupAutoSyncTrigger10Min')
+      .addItem('⏱️ Auto ซิงค์ทุกๆ 15 นาที', 'setupAutoSyncTrigger15Min')
+      .addItem('⏱️ Auto ซิงค์ทุกๆ 30 นาที', 'setupAutoSyncTrigger30Min')
+      .addSeparator()
+      .addItem('🛑 ปิดระบบ Auto Sync Trigger ทั้งหมด', 'removeAutoSyncTriggers')
+    )
+    .addSeparator()
+    .addItem('🔍 ตรวจสอบความสัมพันธ์ตัวเลขทะเบียน 4-11 (Audit Consistency)', 'menuAuditRegistryConsistency')
+    .addItem('⚡ ปรับปรุงตัวเลขให้สอดคล้องกันอัตโนมัติ (Auto Reconcile 4-11)', 'menuReconcileAll')
     .addSeparator()
     .addItem('📊 ล้างและรีเซ็ตโครงสร้างตาราง (Reset & Reformat Tables)', 'initAll11Sheets')
     .addItem('🧪 ทดสอบการเชื่อมต่อ API Web App', 'testSelfConnection')
@@ -565,32 +640,67 @@ function onOpen() {
 }
 
 /**
- * ติดตั้ง Time-driven Trigger ใน Google Apps Script เพื่อให้อัปเดตและตรวจจับการเปลี่ยนแปลงอัตโนมัติทุกๆ 1 นาที
+ * ติดตั้ง Time-driven Trigger ใน Google Apps Script (Auto ซิงค์ทุกๆ นาทีตามกำหนด)
  */
-function setupAutoSyncTrigger() {
+function setupAutoSyncTrigger(minutes) {
+  var min = Number(minutes) || 1;
   removeAutoSyncTriggers();
   ScriptApp.newTrigger('autoSyncHeartbeat')
     .timeBased()
-    .everyMinutes(1)
+    .everyMinutes(min)
     .create();
   var ss = getSpreadsheet();
-  logAction(ss, 'เปิดใช้งานระบบ Auto Sync Trigger อัตโนมัติทุกๆ 1 นาที สำเร็จ');
-  SpreadsheetApp.getUi().alert('เปิดใช้งานระบบ Auto Sync อัตโนมัติทุกๆ 1 นาที เรียบร้อยแล้ว!');
+  var msg = 'เปิดใช้งานระบบ Auto Sync อัตโนมัติทุกๆ ' + min + ' นาที เรียบร้อยแล้ว';
+  logAction(ss, msg);
+  PropertiesService.getScriptProperties().setProperty('AUTO_SYNC_INTERVAL_MIN', String(min));
+  PropertiesService.getScriptProperties().setProperty('AUTO_SYNC_ACTIVE', 'true');
+  return msg;
+}
+
+function setupAutoSyncTrigger1Min() {
+  var msg = setupAutoSyncTrigger(1);
+  SpreadsheetApp.getUi().alert(msg);
+}
+
+function setupAutoSyncTrigger5Min() {
+  var msg = setupAutoSyncTrigger(5);
+  SpreadsheetApp.getUi().alert(msg);
+}
+
+function setupAutoSyncTrigger10Min() {
+  var msg = setupAutoSyncTrigger(10);
+  SpreadsheetApp.getUi().alert(msg);
+}
+
+function setupAutoSyncTrigger15Min() {
+  var msg = setupAutoSyncTrigger(15);
+  SpreadsheetApp.getUi().alert(msg);
+}
+
+function setupAutoSyncTrigger30Min() {
+  var msg = setupAutoSyncTrigger(30);
+  SpreadsheetApp.getUi().alert(msg);
 }
 
 function removeAutoSyncTriggers() {
   var triggers = ScriptApp.getProjectTriggers();
+  var count = 0;
   for (var i = 0; i < triggers.length; i++) {
     if (triggers[i].getHandlerFunction() === 'autoSyncHeartbeat') {
       ScriptApp.deleteTrigger(triggers[i]);
+      count++;
     }
   }
+  PropertiesService.getScriptProperties().setProperty('AUTO_SYNC_ACTIVE', 'false');
+  var ss = getSpreadsheet();
+  logAction(ss, 'ปิดระบบ Auto Sync Triggers เรียบร้อย (' + count + ' ตัว)');
 }
 
 function autoSyncHeartbeat() {
   var ss = getSpreadsheet();
   var nowStr = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm:ss');
   PropertiesService.getScriptProperties().setProperty('LAST_SYNC_TIMESTAMP', nowStr);
+  reconcileAllSections4To11();
 }
 
 /**
@@ -916,10 +1026,6 @@ function doGet(e) {
       }
       return jsonResponse({ status: 'success', count: repPlans.length, data: repPlans });
     }
-        }
-      }
-      return jsonResponse({ status: 'success', count: repPlans.length, data: repPlans });
-    }
 
     return jsonResponse({ status: 'error', message: 'ไม่พบ action: ' + action });
   } catch (error) {
@@ -1071,7 +1177,7 @@ function writeReferralsSheet(ss, items, nowStr) {
   var sheet = getOrCreateSheet(ss, 'ReferralRoutes');
   sheet.clearContents();
   var headers = [
-    'รพ. ต้นทาง', 'รพ. ปลายทาง', 'รูปแบบการส่งต่อ', 'เส้นทางหลัก',
+    'รหัสทะเบียนส่งต่อ', 'รพ. ต้นทาง', 'รพ. ปลายทาง', 'รูปแบบการส่งต่อ', 'เส้นทางหลัก',
     'เส้นทางเลี่ยงฉุกเฉิน', 'ระยะเวลาเดินทาง (นาที)', 'สถานะความปลอดภัย',
     'ยานพาหนะที่ต้องการ', 'เตียงรองรับปลายทาง', 'อัปเดตล่าสุด'
   ];
@@ -1079,7 +1185,7 @@ function writeReferralsSheet(ss, items, nowStr) {
   formatHeaderRow(sheet);
   var rows = items.map(function(r) {
     return [
-      r.originHospital || '', r.destinationHospital || '', r.routeType || '', r.primaryPath || '',
+      r.code || '', r.originHospital || '', r.destinationHospital || '', r.routeType || '', r.primaryPath || '',
       r.bypassPath || '', r.estimatedMinutes || 60, r.safetyStatus || '', r.vehicleNeeded || '',
       r.availableBeds || 0, nowStr
     ];
@@ -1090,12 +1196,12 @@ function writeReferralsSheet(ss, items, nowStr) {
 function writeBcpSheet(ss, items, nowStr) {
   var sheet = getOrCreateSheet(ss, 'BcpResources');
   sheet.clearContents();
-  var headers = ['หัวข้อทรัพยากร BCP', 'ระยะเวลาสำรอง', 'สถานะ', 'ประเภทสถานะ', 'รายละเอียดและปริมาณ', 'แผนรับมือฉุกเฉิน', 'ตรวจเช็กล่าสุด'];
+  var headers = ['รหัสทะเบียน BCP', 'หัวข้อทรัพยากร BCP', 'ระยะเวลาสำรอง', 'สถานะ', 'ประเภทสถานะ', 'รายละเอียดและปริมาณ', 'แผนรับมือฉุกเฉิน', 'ตรวจเช็กล่าสุด'];
   sheet.appendRow(headers);
   formatHeaderRow(sheet);
   var rows = items.map(function(b) {
     return [
-      b.title || '', b.duration || '', b.status || '', b.statusType || 'success',
+      b.code || '', b.title || '', b.duration || '', b.status || '', b.statusType || 'success',
       b.detail || '', b.contingencyPlan || '', nowStr
     ];
   });
@@ -1105,12 +1211,12 @@ function writeBcpSheet(ss, items, nowStr) {
 function writeStaffSheet(ss, items, nowStr) {
   var sheet = getOrCreateSheet(ss, 'StaffRoster');
   sheet.clearContents();
-  var headers = ['โรงพยาบาล', 'อำเภอ', 'แผนก/หน่วยงาน', 'ชื่อทีมปฏิบัติการ', 'เวรปฏิบัติงาน', 'แพทย์ (คน)', 'พยาบาล (คน)', 'EMT (คน)', 'ความพร้อม (%)', 'หัวหน้าทีม', 'เบอร์โทรติดต่อ'];
+  var headers = ['รหัสทะเบียนทีม', 'ชื่อทีมปฏิบัติการ', 'โรงพยาบาล', 'อำเภอ', 'แผนก/หน่วยงาน', 'เวรปฏิบัติงาน', 'แพทย์ (คน)', 'พยาบาล (คน)', 'EMT (คน)', 'ความพร้อม (%)', 'หัวหน้าทีม', 'เบอร์โทรติดต่อ'];
   sheet.appendRow(headers);
   formatHeaderRow(sheet);
   var rows = items.map(function(s) {
     return [
-      s.hospitalName || '', s.district || '', s.department || '', s.teamName || '',
+      s.code || '', s.teamName || '', s.hospitalName || '', s.district || '', s.department || '',
       s.currentShift || 'ทีม A', s.doctorCount || 0, s.nurseCount || 0, s.emtCount || 0,
       s.readinessPct || 85, s.leaderName || '', s.contactPhone || ''
     ];
@@ -1122,20 +1228,21 @@ function writeHospitalsSheet(ss, items, nowStr) {
   var sheet = getOrCreateSheet(ss, 'HospitalStatus');
   sheet.clearContents();
   var headers = [
-    'ชื่อโรงพยาบาล', 'ระดับ', 'อำเภอ', 'ระดับความเสี่ยง', 'ER', 'LR', 'OR', 'ICU', 'ไตเทียม', 'OPD/NCD',
+    'รหัสทะเบียน รพ.', 'รหัส 5 หลัก สธ.', 'ชื่อโรงพยาบาล', 'ระดับ', 'อำเภอ', 'ระดับความเสี่ยง', 'ER', 'LR', 'OR', 'ICU', 'ไตเทียม', 'OPD/NCD',
     'Safe Operating RTO (ชม.)', 'ไฟฟ้าสำรอง Gen (ชม.)', 'ออกซิเจน (ชม.)', 'น้ำประปา (ชม.)',
     'เลือดสำรอง (ยูนิต)', 'สถานะเลือด', 'แพทย์ (คน)', 'พยาบาล (คน)', 'EMT (คน)',
-    'ความพร้อมบุคลากร (%)', 'เตียงทั้งหมด', 'เตียงครอง', 'หมายเหตุ'
+    'ความพร้อมบุคลากร (%)', 'เตียงทั้งหมด', 'เตียงครอง', 'เตียงว่าง', 'ผู้ป่วยฟอกไต (ราย)', 'ผู้ป่วยHome O2 (ราย)', 'หมายเหตุ'
   ];
   sheet.appendRow(headers);
   formatHeaderRow(sheet);
   var rows = items.map(function(h) {
     return [
-      h.name || '', h.type || 'M', h.district || '', h.riskLevel || 'warning',
+      h.code || '', h.hospCode5Digit || '', h.name || '', h.type || 'M', h.district || '', h.riskLevel || 'warning',
       h.er || 'active', h.lr || 'active', h.or || 'active', h.icu || 'active', h.dialysis || 'active', h.opdNcd || 'active',
       h.autonomyHours || 72, h.fuelGeneratorHours || 72, h.oxygenHours || 72, h.waterHours || 72,
       h.bloodUnits || 20, h.bloodStatus || 'เพียงพอ', h.doctorCount || 0, h.nurseCount || 0, h.emtCount || 0,
-      h.staffReadinessPct || 85, h.bedTotal || 60, h.bedOccupied || 40, h.notes || ''
+      h.staffReadinessPct || 85, h.bedTotal || 60, h.bedOccupied || 40, (h.bedTotal - h.bedOccupied) || 20,
+      h.dialysisPatientsCount || 0, h.homeOxygenPatientsCount || 0, h.notes || ''
     ];
   });
   if (rows.length > 0) sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
@@ -1144,12 +1251,12 @@ function writeHospitalsSheet(ss, items, nowStr) {
 function writeShphSheet(ss, items, nowStr) {
   var sheet = getOrCreateSheet(ss, 'ShphNetwork');
   sheet.clearContents();
-  var headers = ['ชื่อ รพ.สต.', 'อำเภอ', 'ตำบล', 'สถานะความปลอดภัย', 'จนท. (คน)', 'เบอร์โทร', 'ผู้ป่วยเปราะบางในเขต (ราย)', 'ระดับความเสี่ยง', 'แผนเผชิญเหตุ'];
+  var headers = ['รหัสทะเบียน รพ.สต.', 'ชื่อ รพ.สต.', 'อำเภอ', 'ตำบล', 'สถานะความปลอดภัย', 'จนท. (คน)', 'เบอร์โทร', 'ผู้ป่วยเปราะบางในเขต (ราย)', 'ระดับความเสี่ยง', 'แผนเผชิญเหตุ'];
   sheet.appendRow(headers);
   formatHeaderRow(sheet);
   var rows = items.map(function(s) {
     return [
-      s.name || '', s.district || '', s.subdistrict || '', s.status || 'ปกติ',
+      s.code || '', s.name || '', s.district || '', s.subdistrict || '', s.status || 'ปกติ',
       s.totalStaff || 5, s.phone || '', s.vulnerableCovered || 0, s.riskLevel || 'เขียว',
       s.contingencyPlan || ''
     ];
@@ -1160,12 +1267,12 @@ function writeShphSheet(ss, items, nowStr) {
 function writeCommunicationsSheet(ss, items, nowStr) {
   var sheet = getOrCreateSheet(ss, 'CommunicationLayers');
   sheet.clearContents();
-  var headers = ['ระดับ', 'ชื่อระบบ', 'ประเภทเครือข่าย', 'ช่องทางหลัก/ความถี่', 'อุปกรณ์ประจำการ', 'ขอบเขตครอบคลุม', 'ผู้รับผิดชอบ', 'เบอร์ติดต่อ', 'เงื่อนไข Failover', 'สถานะ', 'เอกสารหลักฐานจริง'];
+  var headers = ['รหัสทะเบียนสื่อสาร', 'ระดับ', 'ชื่อระบบ', 'ประเภทเครือข่าย', 'ช่องทางหลัก/ความถี่', 'อุปกรณ์ประจำการ', 'ขอบเขตครอบคลุม', 'ผู้รับผิดชอบ', 'เบอร์ติดต่อ', 'เงื่อนไข Failover', 'สถานะ', 'เอกสารหลักฐานจริง'];
   sheet.appendRow(headers);
   formatHeaderRow(sheet);
   var rows = items.map(function(c) {
     return [
-      c.level || 1, c.name || '', c.type || '', c.primaryChannel || '', c.equipment || '',
+      c.code || '', c.level || 1, c.name || '', c.type || '', c.primaryChannel || '', c.equipment || '',
       c.coverage || '', c.responsibleOfficer || '', c.contact || '', c.failoverCondition || '',
       c.status || 'พร้อมใช้งาน', c.evidenceDocument || ''
     ];
@@ -1176,12 +1283,12 @@ function writeCommunicationsSheet(ss, items, nowStr) {
 function writeReplenishmentsSheet(ss, items, nowStr) {
   var sheet = getOrCreateSheet(ss, 'ReplenishmentPlans');
   sheet.clearContents();
-  var headers = ['หมวดหมู่ทรัพยากร', 'เกณฑ์สั่งการ (Trigger)', 'เส้นทางนำเข้าหลัก', 'เส้นทางนำเข้าสำรอง', 'ยานพาหนะลำเลียง', 'คลังต้นทางส่งกำลัง', 'ผู้ประสานงาน', 'SLA (ชม.)', 'สถานะความพร้อม'];
+  var headers = ['รหัสทะเบียนนำเข้า', 'หมวดหมู่ทรัพยากร', 'เกณฑ์สั่งการ (Trigger)', 'เส้นทางนำเข้าหลัก', 'เส้นทางนำเข้าสำรอง', 'ยานพาหนะลำเลียง', 'คลังต้นทางส่งกำลัง', 'ผู้ประสานงาน', 'SLA (ชม.)', 'สถานะความพร้อม'];
   sheet.appendRow(headers);
   formatHeaderRow(sheet);
   var rows = items.map(function(r) {
     return [
-      r.resourceCategory || '', r.triggerThreshold || '', r.primaryInboundRoute || '',
+      r.code || '', r.resourceCategory || '', r.triggerThreshold || '', r.primaryInboundRoute || '',
       r.backupInboundRoute || '', r.transportMode || '', r.supplyHubOrigin || '',
       r.contactPerson || '', r.slaHours || 6, r.status || 'เตรียมพร้อมระดับ 2'
     ];

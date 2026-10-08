@@ -29,9 +29,12 @@ interface Props {
   onChangeFontSize: (size: FontSizeLevel) => void;
   autoSyncEnabled?: boolean;
   autoSyncSeconds?: number;
+  countdownSeconds?: number;
   lastSyncTime?: string | null;
   isSyncing?: boolean;
   onToggleAutoSync?: () => void;
+  onChangeAutoSyncInterval?: (seconds: number) => void;
+  onTriggerInstantSync?: () => void;
 }
 
 export const HeaderBanner: React.FC<Props> = ({
@@ -44,9 +47,12 @@ export const HeaderBanner: React.FC<Props> = ({
   onChangeFontSize,
   autoSyncEnabled = true,
   autoSyncSeconds = 60,
+  countdownSeconds = 60,
   lastSyncTime,
   isSyncing = false,
   onToggleAutoSync,
+  onChangeAutoSyncInterval,
+  onTriggerInstantSync,
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
 
@@ -119,22 +125,71 @@ export const HeaderBanner: React.FC<Props> = ({
             <ExternalLink className="w-3 h-3 ml-0.5 opacity-70" />
           </button>
 
-          {/* Auto-Sync Indicator & Trigger (Requirement 2: Auto ซิงค์ทุกๆ) */}
-          <div
-            onClick={onToggleAutoSync}
-            className={`cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-mono transition-all select-none ${
-              autoSyncEnabled
-                ? 'bg-cyan-950/60 border-cyan-500/50 text-cyan-200 hover:bg-cyan-900/50'
-                : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-300'
-            }`}
-            title={`คลิกเพื่อเปิด/ปิด Auto Sync (ซิงค์อัตโนมัติทุกๆ ${autoSyncSeconds} วินาที)`}
-          >
-            <RefreshCw className={`w-3 h-3 text-cyan-400 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span className="font-semibold">
-              {autoSyncEnabled ? `Auto ซิงค์ทุก ${autoSyncSeconds}s` : 'Auto ซิงค์: ปิด'}
-            </span>
+          {/* Auto-Sync Multi-Interval Controls (Requirement 3: Auto ซิงค์ทุกๆ) */}
+          <div className="flex items-center bg-slate-900/90 border border-sky-700/60 rounded-md p-0.5 text-[11px] gap-1 shadow-sm">
+            {/* Toggle Button */}
+            <button
+              onClick={onToggleAutoSync}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${
+                autoSyncEnabled
+                  ? 'bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 hover:bg-emerald-900/80'
+                  : 'bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+              title={autoSyncEnabled ? 'คลิกเพื่อปิด Auto Sync' : 'คลิกเพื่อเปิด Auto Sync'}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${autoSyncEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+              <span>{autoSyncEnabled ? 'Auto-Sync' : 'ซิงค์ปิด'}</span>
+            </button>
+
+            {/* Dropdown Interval: Auto ซิงค์ทุกๆ */}
+            <div className="flex items-center gap-1 text-[10px] text-slate-300 px-1 border-l border-slate-700">
+              <span className="hidden xl:inline text-sky-400 font-medium">ซิงค์ทุก:</span>
+              <select
+                value={autoSyncSeconds}
+                onChange={(e) => onChangeAutoSyncInterval && onChangeAutoSyncInterval(Number(e.target.value))}
+                className="bg-slate-950 text-cyan-300 border border-cyan-800/80 rounded px-1.5 py-0.5 text-[10px] font-mono focus:outline-none focus:border-cyan-400 cursor-pointer"
+                title="เลือกความถี่ของ Auto Sync"
+              >
+                <option value={30}>30 วินาที</option>
+                <option value={60}>1 นาที (แนะนำ)</option>
+                <option value={120}>2 นาที</option>
+                <option value={300}>5 นาที</option>
+                <option value={600}>10 นาที</option>
+                <option value={900}>15 นาที</option>
+                <option value={1800}>30 นาที</option>
+              </select>
+            </div>
+
+            {/* Countdown Badge */}
+            {autoSyncEnabled && (
+              <div
+                className="hidden md:flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/40 text-[10px] font-mono text-cyan-200"
+                title={`กำลังนับถอยหลังเพื่อซิงค์ข้อมูลรอบถัดไปอัตโนมัติ (ทุกๆ ${autoSyncSeconds} วินาที)`}
+              >
+                <Clock className="w-2.5 h-2.5 text-cyan-400" />
+                <span>
+                  {isSyncing
+                    ? 'กำลังซิงค์...'
+                    : Math.floor(countdownSeconds / 60) > 0
+                    ? `${Math.floor(countdownSeconds / 60)}:${String(countdownSeconds % 60).padStart(2, '0')}`
+                    : `${countdownSeconds}s`}
+                </span>
+              </div>
+            )}
+
+            {/* Instant Sync Button */}
+            <button
+              onClick={onTriggerInstantSync}
+              disabled={isSyncing}
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-600/80 hover:bg-cyan-500 text-white font-medium text-[10px] transition shadow disabled:opacity-50"
+              title="ซิงค์และบันทึกข้อมูลขึ้น Sheet ทันที ไม่ต้องรอนับถอยหลัง"
+            >
+              <RefreshCw className={`w-2.5 h-2.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">ซิงค์ทันที</span>
+            </button>
+
             {lastSyncTime && (
-              <span className="hidden lg:inline text-[9px] text-slate-400 border-l border-cyan-800/80 pl-1.5 ml-0.5">
+              <span className="hidden 2xl:inline text-[9px] text-slate-400 border-l border-slate-700 pl-1.5">
                 {lastSyncTime}
               </span>
             )}

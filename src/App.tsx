@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Sidebar, TabId } from './components/Sidebar';
 import { HeaderBanner, FontSizeLevel } from './components/HeaderBanner';
 import { OverviewView } from './views/OverviewView';
@@ -119,6 +119,39 @@ export default function App() {
   const [isSheetModalOpen, setIsSheetModalOpen] = useState<boolean>(false);
   const [isSyncingSheet, setIsSyncingSheet] = useState<boolean>(false);
 
+  // Auto-Sync multi-interval state (Requirement 2 & 3: Auto ซิงค์ทุกๆ)
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('eoc_auto_sync_enabled');
+      return saved !== null ? saved === 'true' : true;
+    } catch (_) {
+      return true;
+    }
+  });
+
+  const [autoSyncIntervalSeconds, setAutoSyncIntervalSeconds] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('eoc_auto_sync_interval_seconds');
+      if (saved) return Number(saved) || 60;
+    } catch (_) {}
+    return 60; // ค่าเริ่มต้น 1 นาที (60 วินาที)
+  });
+
+  const [countdownSeconds, setCountdownSeconds] = useState<number>(autoSyncIntervalSeconds);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('eoc_auto_sync_enabled', String(autoSyncEnabled));
+    } catch (_) {}
+  }, [autoSyncEnabled]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('eoc_auto_sync_interval_seconds', String(autoSyncIntervalSeconds));
+    } catch (_) {}
+    setCountdownSeconds(autoSyncIntervalSeconds);
+  }, [autoSyncIntervalSeconds]);
+
   // Sync notification toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -163,7 +196,61 @@ export default function App() {
   };
 
   // -------------------------------------------------------------------
-  // CRUD Handlers for all 8 Sections
+  // Cross-Registry Data Correlation (ข้อ 4 - 11 สัมพันธ์ สอดคล้อง เป็นตัวเลขเดียวกัน 100%)
+  // -------------------------------------------------------------------
+  // เตียงว่างปลายทางในข้อ 5 คำนวณเชื่อมโยงตรงกับ 13 รพ. ในข้อ 8 แบบ Real-time
+  const correlatedReferralRoutes = useMemo(() => {
+    return referralRoutes.map((r) => {
+      const destHosp = hospitals.find(
+        (h) =>
+          h.name.includes(r.destinationHospital) ||
+          r.destinationHospital.includes(h.name) ||
+          (h.code && r.destinationHospitalCode === h.code)
+      );
+      if (destHosp) {
+        return {
+          ...r,
+          availableBeds: Math.max(0, destHosp.bedTotal - destHosp.bedOccupied),
+        };
+      }
+      return r;
+    });
+  }, [referralRoutes, hospitals]);
+
+  // ตัวเลขผู้ป่วยฟอกไตและ Home O2 ใน 13 รพ. สอดคล้องกับทะเบียนผู้ป่วยเปราะบางในข้อ 4 แบบ Real-time
+  const correlatedHospitals = useMemo(() => {
+    return hospitals.map((h) => {
+      const linkedDialysisCount = patients.filter(
+        (p) =>
+          p.category === 'dialysis' &&
+          (p.hospitalRef.includes(h.name) || h.name.includes(p.hospitalRef) || p.district === h.district)
+      ).length;
+      const linkedHomeO2Count = patients.filter(
+        (p) =>
+          p.category === 'home_o2' &&
+          (p.hospitalRef.includes(h.name) || h.name.includes(p.hospitalRef) || p.district === h.district)
+      ).length;
+      return {
+        ...h,
+        dialysisPatientsCount: (h.dialysisPatientsCount || 0) + linkedDialysisCount,
+        homeOxygenPatientsCount: (h.homeOxygenPatientsCount || 0) + linkedHomeO2Count,
+      };
+    });
+  }, [hospitals, patients]);
+
+  // Requirement 2 & 3: Auto Push On Every Change Across Sections 4-11
+  const autoPushOnChange = (actionMsg: string) => {
+    showToast(actionMsg);
+    setCountdownSeconds(autoSyncIntervalSeconds);
+    if (autoSyncEnabled) {
+      setTimeout(() => {
+        handleBulkPush4To11(undefined, true);
+      }, 500);
+    }
+  };
+
+  // -------------------------------------------------------------------
+  // CRUD Handlers for all 8 Sections (With Auto-Push on Every Change)
   // -------------------------------------------------------------------
 
   // 1. Patients CRUD (ข้อ 4)
@@ -171,19 +258,19 @@ export default function App() {
     const updated = [item, ...patients];
     setPatients(updated);
     savePatientsToStorage(updated);
-    showToast(`เพิ่มผู้ป่วย ${item.fullName} เรียบร้อย`);
+    autoPushOnChange(`เพิ่มผู้ป่วย ${item.fullName} [${item.code}] เรียบร้อย (Auto-Sync)`);
   };
   const handleUpdatePatient = (item: VulnerablePatient) => {
     const updated = patients.map((p) => (p.id === item.id ? item : p));
     setPatients(updated);
     savePatientsToStorage(updated);
-    showToast(`อัปเดตข้อมูล ${item.fullName} เรียบร้อย`);
+    autoPushOnChange(`อัปเดตข้อมูล ${item.fullName} [${item.code}] เรียบร้อย (Auto-Sync)`);
   };
   const handleDeletePatient = (id: string) => {
     const updated = patients.filter((p) => p.id !== id);
     setPatients(updated);
     savePatientsToStorage(updated);
-    showToast(`ลบข้อมูลผู้ป่วยเรียบร้อย`);
+    autoPushOnChange('ลบข้อมูลผู้ป่วยเรียบร้อย (Auto-Sync)');
   };
 
   // 2. Referral Routes CRUD (ข้อ 5)
@@ -191,19 +278,19 @@ export default function App() {
     const updated = [item, ...referralRoutes];
     setReferralRoutes(updated);
     saveReferralsToStorage(updated);
-    showToast(`เพิ่มเส้นทางส่งต่อ ${item.originHospital} ➔ ${item.destinationHospital} เรียบร้อย`);
+    autoPushOnChange(`เพิ่มเส้นทางส่งต่อ ${item.originHospital} ➔ ${item.destinationHospital} (Auto-Sync)`);
   };
   const handleUpdateReferral = (item: ReferralRouteItem) => {
     const updated = referralRoutes.map((r) => (r.id === item.id ? item : r));
     setReferralRoutes(updated);
     saveReferralsToStorage(updated);
-    showToast(`อัปเดตเส้นทางส่งต่อเรียบร้อย`);
+    autoPushOnChange('อัปเดตเส้นทางส่งต่อเรียบร้อย (Auto-Sync)');
   };
   const handleDeleteReferral = (id: string) => {
     const updated = referralRoutes.filter((r) => r.id !== id);
     setReferralRoutes(updated);
     saveReferralsToStorage(updated);
-    showToast(`ลบเส้นทางส่งต่อเรียบร้อย`);
+    autoPushOnChange('ลบเส้นทางส่งต่อเรียบร้อย (Auto-Sync)');
   };
 
   // 3. BCP Items CRUD (ข้อ 6)
@@ -211,19 +298,19 @@ export default function App() {
     const updated = [item, ...bcpItems];
     setBcpItems(updated);
     saveBcpToStorage(updated);
-    showToast(`เพิ่มทรัพยากร BCP "${item.title}" เรียบร้อย`);
+    autoPushOnChange(`เพิ่มทรัพยากร BCP "${item.title}" [${item.code}] (Auto-Sync)`);
   };
   const handleUpdateBcp = (item: BcpResourceItem) => {
     const updated = bcpItems.map((b) => (b.id === item.id ? item : b));
     setBcpItems(updated);
     saveBcpToStorage(updated);
-    showToast(`อัปเดตทรัพยากร BCP "${item.title}" เรียบร้อย`);
+    autoPushOnChange(`อัปเดตทรัพยากร BCP "${item.title}" (Auto-Sync)`);
   };
   const handleDeleteBcp = (id: string) => {
     const updated = bcpItems.filter((b) => b.id !== id);
     setBcpItems(updated);
     saveBcpToStorage(updated);
-    showToast(`ลบทรัพยากร BCP เรียบร้อย`);
+    autoPushOnChange('ลบทรัพยากร BCP เรียบร้อย (Auto-Sync)');
   };
 
   // 4. Staff Teams CRUD (ข้อ 7)
@@ -231,19 +318,19 @@ export default function App() {
     const updated = [item, ...staffTeams];
     setStaffTeams(updated);
     saveStaffToStorage(updated);
-    showToast(`เพิ่มทีมปฏิบัติการ ${item.teamName} เรียบร้อย`);
+    autoPushOnChange(`เพิ่มทีมปฏิบัติการ ${item.teamName} [${item.code}] (Auto-Sync)`);
   };
   const handleUpdateStaff = (item: StaffTeamItem) => {
     const updated = staffTeams.map((s) => (s.id === item.id ? item : s));
     setStaffTeams(updated);
     saveStaffToStorage(updated);
-    showToast(`อัปเดตข้อมูลทีม ${item.teamName} เรียบร้อย`);
+    autoPushOnChange(`อัปเดตข้อมูลทีม ${item.teamName} (Auto-Sync)`);
   };
   const handleDeleteStaff = (id: string) => {
     const updated = staffTeams.filter((s) => s.id !== id);
     setStaffTeams(updated);
     saveStaffToStorage(updated);
-    showToast(`ลบข้อมูลทีมปฏิบัติการเรียบร้อย`);
+    autoPushOnChange('ลบข้อมูลทีมปฏิบัติการเรียบร้อย (Auto-Sync)');
   };
 
   // 5. Hospitals CRUD (ข้อ 8)
@@ -251,19 +338,19 @@ export default function App() {
     const updated = [item, ...hospitals];
     setHospitals(updated);
     saveHospitalsToStorage(updated);
-    showToast(`เพิ่มโรงพยาบาล ${item.name} เรียบร้อย`);
+    autoPushOnChange(`เพิ่มโรงพยาบาล ${item.name} [${item.code}] (Auto-Sync)`);
   };
   const handleUpdateHospital = (item: HospitalStatus) => {
     const updated = hospitals.map((h) => (h.id === item.id ? item : h));
     setHospitals(updated);
     saveHospitalsToStorage(updated);
-    showToast(`อัปเดตสถานะ ${item.name} เรียบร้อย`);
+    autoPushOnChange(`อัปเดตสถานะ ${item.name} (Auto-Sync)`);
   };
   const handleDeleteHospital = (id: string) => {
     const updated = hospitals.filter((h) => h.id !== id);
     setHospitals(updated);
     saveHospitalsToStorage(updated);
-    showToast(`ลบข้อมูลโรงพยาบาลเรียบร้อย`);
+    autoPushOnChange('ลบข้อมูลโรงพยาบาลเรียบร้อย (Auto-Sync)');
   };
 
   // 6. SHPH Network CRUD (ข้อ 9)
@@ -271,19 +358,19 @@ export default function App() {
     const updated = [item, ...shphList];
     setShphList(updated);
     saveShphToStorage(updated);
-    showToast(`เพิ่ม ${item.name} เรียบร้อย`);
+    autoPushOnChange(`เพิ่ม ${item.name} [${item.code}] (Auto-Sync)`);
   };
   const handleUpdateShph = (item: ShphItem) => {
     const updated = shphList.map((s) => (s.id === item.id ? item : s));
     setShphList(updated);
     saveShphToStorage(updated);
-    showToast(`อัปเดตข้อมูล ${item.name} เรียบร้อย`);
+    autoPushOnChange(`อัปเดตข้อมูล ${item.name} (Auto-Sync)`);
   };
   const handleDeleteShph = (id: string) => {
     const updated = shphList.filter((s) => s.id !== id);
     setShphList(updated);
     saveShphToStorage(updated);
-    showToast(`ลบข้อมูล รพ.สต. เรียบร้อย`);
+    autoPushOnChange('ลบข้อมูล รพ.สต. เรียบร้อย (Auto-Sync)');
   };
 
   // 7. Communication Layers CRUD (ข้อ 10)
@@ -291,19 +378,19 @@ export default function App() {
     const updated = [...communicationLayers, item];
     setCommunicationLayers(updated);
     saveCommunicationsToStorage(updated);
-    showToast(`เพิ่มระบบสื่อสาร ${item.name} เรียบร้อย`);
+    autoPushOnChange(`เพิ่มระบบสื่อสาร ${item.name} (Auto-Sync)`);
   };
   const handleUpdateCommunication = (item: CommunicationLayer) => {
     const updated = communicationLayers.map((c) => (c.level === item.level ? item : c));
     setCommunicationLayers(updated);
     saveCommunicationsToStorage(updated);
-    showToast(`อัปเดตระบบสื่อสารระดับ ${item.level} เรียบร้อย`);
+    autoPushOnChange(`อัปเดตระบบสื่อสารระดับ ${item.level} (Auto-Sync)`);
   };
   const handleDeleteCommunication = (level: number) => {
     const updated = communicationLayers.filter((c) => c.level !== level);
     setCommunicationLayers(updated);
     saveCommunicationsToStorage(updated);
-    showToast(`ลบระบบสื่อสารเรียบร้อย`);
+    autoPushOnChange('ลบระบบสื่อสารเรียบร้อย (Auto-Sync)');
   };
 
   // 8. Replenishment Plans CRUD (ข้อ 11)
@@ -311,19 +398,19 @@ export default function App() {
     const updated = [item, ...replenishmentPlans];
     setReplenishmentPlans(updated);
     saveReplenishmentsToStorage(updated);
-    showToast(`เพิ่มแผนนำเข้า "${item.resourceCategory}" เรียบร้อย`);
+    autoPushOnChange(`เพิ่มแผนนำเข้า "${item.resourceCategory}" [${item.code}] (Auto-Sync)`);
   };
   const handleUpdateReplenishment = (item: ReplenishmentPlan) => {
     const updated = replenishmentPlans.map((r) => (r.id === item.id ? item : r));
     setReplenishmentPlans(updated);
     saveReplenishmentsToStorage(updated);
-    showToast(`อัปเดตแผนนำเข้า "${item.resourceCategory}" เรียบร้อย`);
+    autoPushOnChange(`อัปเดตแผนนำเข้า "${item.resourceCategory}" (Auto-Sync)`);
   };
   const handleDeleteReplenishment = (id: string) => {
     const updated = replenishmentPlans.filter((r) => r.id !== id);
     setReplenishmentPlans(updated);
     saveReplenishmentsToStorage(updated);
-    showToast(`ลบแผนนำเข้าทรัพยากรเรียบร้อย`);
+    autoPushOnChange('ลบแผนนำเข้าทรัพยากรเรียบร้อย (Auto-Sync)');
   };
 
   // -------------------------------------------------------------------
@@ -415,35 +502,70 @@ export default function App() {
   };
 
   // Requirement 1: นำข้อมูลในเมนู บันทึกใน sheet ตั้งแต่ ข้อ 4-11
-  const handleBulkPush4To11 = async () => {
+  const handleBulkPush4To11 = async (customToast?: string, isSilent = false) => {
+    if (isSyncingSheet) return;
     setIsSyncingSheet(true);
     try {
       const res = await pushAllSections4To11ToSheet(
         {
           patients,
-          referrals: referralRoutes,
+          referrals: correlatedReferralRoutes,
           bcp: bcpItems,
           staff: staffTeams,
-          hospitals,
+          hospitals: correlatedHospitals,
           shph: shphList,
           communications: communicationLayers,
           replenishments: replenishmentPlans,
         },
         sheetConfig.gasWebAppUrl
       );
+      const timeStr = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
       const updatedConfig: SheetConfigState = {
         ...sheetConfig,
-        lastSyncTime: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.',
+        lastSyncTime: timeStr,
         status: res.success ? 'success' : 'error',
       };
       handleSaveSheetConfig(updatedConfig);
-      showToast(res.message);
+      if (customToast) {
+        showToast(customToast);
+      } else if (!isSilent) {
+        showToast(res.message);
+      }
     } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูลข้อ 4-11: ' + String(err));
+      if (!isSilent) showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูลข้อ 4-11: ' + String(err));
     } finally {
       setIsSyncingSheet(false);
     }
   };
+
+  // Requirement 3: Auto ซิงค์ทุกๆ (Interval Ticker Loop)
+  useEffect(() => {
+    if (!autoSyncEnabled) return;
+
+    const timer = setInterval(() => {
+      setCountdownSeconds((prev) => {
+        if (prev <= 1) {
+          handleBulkPush4To11(undefined, true);
+          return autoSyncIntervalSeconds;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [
+    autoSyncEnabled,
+    autoSyncIntervalSeconds,
+    patients,
+    correlatedReferralRoutes,
+    bcpItems,
+    staffTeams,
+    correlatedHospitals,
+    shphList,
+    communicationLayers,
+    replenishmentPlans,
+    sheetConfig.gasWebAppUrl,
+  ]);
 
   // Requirement 2: รองรับสร้างฐานข้อมูลใหม่ทั้งหมด โดยยึดเนื้อหาข้อมูล โครงสร้างตามหัวข้อ 1-11
   const handleCreateFullDb1To11 = async () => {
@@ -503,6 +625,14 @@ export default function App() {
         sheetConnected={Boolean(sheetConfig.sheetId)}
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
+        autoSyncEnabled={autoSyncEnabled}
+        autoSyncSeconds={autoSyncIntervalSeconds}
+        countdownSeconds={countdownSeconds}
+        lastSyncTime={sheetConfig.lastSyncTime}
+        isSyncing={isSyncingSheet}
+        onToggleAutoSync={() => setAutoSyncEnabled(!autoSyncEnabled)}
+        onChangeAutoSyncInterval={(sec) => setAutoSyncIntervalSeconds(sec)}
+        onTriggerInstantSync={() => handleBulkPush4To11('ซิงค์ข้อมูลข้อ 4-11 ทันทีเรียบร้อย')}
       />
 
       {/* Main Workspace: Left Sidebar + Right Content Area */}
@@ -708,10 +838,10 @@ export default function App() {
           config={sheetConfig}
           onSaveConfig={handleSaveSheetConfig}
           patients={patients || []}
-          referrals={referralRoutes || []}
+          referrals={correlatedReferralRoutes || []}
           bcp={bcpItems || []}
           staff={staffTeams || []}
-          hospitals={hospitals || []}
+          hospitals={correlatedHospitals || []}
           shph={shphList || []}
           communications={communicationLayers || []}
           replenishments={replenishmentPlans || []}
@@ -723,6 +853,14 @@ export default function App() {
           onPullFromSheet={handleGlobalPullFromSheet}
           onPushToSheet={handleGlobalPushToSheet}
           isSyncing={isSyncingSheet}
+          autoSyncEnabled={autoSyncEnabled}
+          autoSyncSeconds={autoSyncIntervalSeconds}
+          countdownSeconds={countdownSeconds}
+          onToggleAutoSync={() => setAutoSyncEnabled(!autoSyncEnabled)}
+          onChangeAutoSyncInterval={(sec) => setAutoSyncIntervalSeconds(sec)}
+          onTriggerInstantSync={async () => {
+            await handleBulkPush4To11('ซิงค์ข้อมูลข้อ 4-11 ทันทีเรียบร้อย');
+          }}
         />
       )}
     </div>
