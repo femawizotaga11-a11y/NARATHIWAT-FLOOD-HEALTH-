@@ -117,7 +117,7 @@ export const OverviewView: React.FC<Props> = ({
             className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md transition flex items-center gap-1.5"
           >
             <HeartHandshake className="w-4 h-4" />
-            <span>ทะเบียนเปราะบาง ({patients.length} รายการ / รวม 1,284)</span>
+            <span>ทะเบียนเปราะบาง ({patients.length} รายการในระบบ)</span>
           </button>
           <button
             onClick={() => onNavigate('gas_sync')}
@@ -177,10 +177,10 @@ export const OverviewView: React.FC<Props> = ({
               </span>
             </div>
             <div className="text-lg font-bold font-mono text-white mt-1">
-              {patients.length} <span className="text-xs font-normal text-slate-400">ในระบบ</span> / 1,284 <span className="text-xs font-normal text-slate-400">รายรวม</span>
+              {patients.length} <span className="text-xs font-normal text-slate-400">รายในทะเบียน</span>
             </div>
             <div className="text-[11px] text-slate-300 mt-1 leading-snug">
-              • 7 กลุ่มเสี่ยงสูง (ไต {totalDialysisPatients}, O2 {totalHomeOxygenPatients})
+              • 7 กลุ่มเสี่ยงสูง (ไต {patients.filter((p) => p.category === 'dialysis').length}, O2 {patients.filter((p) => p.category === 'home_o2').length}, ครรภ์ {patients.filter((p) => p.category === 'pregnant_risk').length})
               <br />• เชื่อม รพ.ปลายทาง (ข้อ 8) & รพ.สต. (ข้อ 9)
             </div>
             <div className="mt-2 text-[10px] text-cyan-400 group-hover:underline">เปิดทะเบียนผู้ป่วย ➜</div>
@@ -406,12 +406,12 @@ export const OverviewView: React.FC<Props> = ({
             </p>
 
             <div className="space-y-2.5">
-              {waterStations.map((st) => {
+              {waterStations.map((st, idx) => {
                 const diff = st.waterLevelM - st.bankLevelM;
                 const isOver = diff > 0;
                 return (
                   <div
-                    key={st.id}
+                    key={st.id || `st-${idx}-${st.name}`}
                     className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-slate-700 transition"
                   >
                     <div className="flex items-center justify-between text-xs">
@@ -502,7 +502,7 @@ export const OverviewView: React.FC<Props> = ({
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-mono">
                 {districts.slice(0, 7).map((d) => (
-                  <tr key={d.districtId} className="hover:bg-slate-800/40 transition">
+                  <tr key={d.id || d.name} className="hover:bg-slate-800/40 transition">
                     <td className="py-2 px-2 font-sans font-medium text-slate-200">{d.name}</td>
                     <td className="py-2 px-2 font-sans">
                       <span
@@ -557,11 +557,11 @@ export const OverviewView: React.FC<Props> = ({
           </div>
 
           <div className="space-y-2.5">
-            {hospitals.slice(0, 5).map((h) => {
+            {hospitals.slice(0, 5).map((h, idx) => {
               const isUrgent = h.autonomyHours <= 24;
               return (
                 <div
-                  key={h.id}
+                  key={h.id || h.code || `hosp-${idx}-${h.name}`}
                   className={`p-2.5 rounded-lg border transition ${
                     isUrgent
                       ? 'bg-red-950/40 border-red-500/50 hover:bg-red-900/30'
@@ -626,10 +626,10 @@ export const OverviewView: React.FC<Props> = ({
             <div>
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <HeartHandshake className="w-4 h-4 text-pink-400" />
-                <span>ข้อ 4. กลุ่มผู้ป่วยเปราะบาง 1,284 ราย (Vulnerable Registry)</span>
+                <span>ข้อ 4. กลุ่มผู้ป่วยเปราะบาง {patients.length} ราย (Vulnerable Registry)</span>
               </h3>
               <p className="text-xs text-slate-400">
-                แยกตาม 7 กลุ่มอาการวิกฤต ต้องอพยพ/ส่งต่อก่อนน้ำท่วมตัดขาด
+                แยกตาม 7 กลุ่มอาการวิกฤต ตรงกับทะเบียนในระบบ 100%
               </p>
             </div>
             <button
@@ -642,30 +642,33 @@ export const OverviewView: React.FC<Props> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {Object.entries(VULNERABLE_CATEGORY_CONFIG).map(([key, item]) => (
-              <div
-                key={key}
-                onClick={() => onNavigate('vulnerable_registry')}
-                className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-sky-500/60 cursor-pointer transition flex items-center justify-between group"
-              >
-                <div>
-                  <div className="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 transition">
-                    {item.label}
+            {Object.entries(VULNERABLE_CATEGORY_CONFIG).map(([key, item]) => {
+              const catCount = patients.filter((p) => p.category === key).length;
+              return (
+                <div
+                  key={key}
+                  onClick={() => onNavigate('vulnerable_registry')}
+                  className="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800 hover:border-sky-500/60 cursor-pointer transition flex items-center justify-between group"
+                >
+                  <div>
+                    <div className="text-xs font-semibold text-slate-200 group-hover:text-cyan-300 transition">
+                      {item.label}
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
+                      {item.action}
+                    </div>
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
-                    {item.action}
+                  <div className="text-sm font-bold font-mono text-cyan-400 bg-sky-950/80 px-2 py-1 rounded border border-sky-800/60 shrink-0 ml-2">
+                    {catCount} <span className="text-[10px] font-normal text-slate-400">ราย</span>
                   </div>
                 </div>
-                <div className="text-sm font-bold font-mono text-cyan-400 bg-sky-950/80 px-2 py-1 rounded border border-sky-800/60 shrink-0 ml-2">
-                  {item.total} <span className="text-[10px] font-normal text-slate-400">ราย</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-3 p-2.5 rounded-lg bg-pink-950/30 border border-pink-500/30 flex items-center justify-between text-xs text-pink-200">
-            <span>รวมผู้ป่วยเปราะบางในพื้นที่เสี่ยงทั้งสิ้น:</span>
-            <span className="font-bold font-mono text-sm text-pink-300">1,284 ราย (สำรวจครบ 100%)</span>
+            <span>รวมผู้ป่วยเปราะบางในทะเบียน:</span>
+            <span className="font-bold font-mono text-sm text-pink-300">{patients.length} ราย (ตรงทะเบียน 100%)</span>
           </div>
         </div>
 

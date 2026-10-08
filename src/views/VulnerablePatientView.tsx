@@ -280,7 +280,7 @@ export const VulnerablePatientView: React.FC<Props> = ({
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px]">
             <span className="px-2 py-0.5 rounded bg-pink-950/80 text-pink-300 border border-pink-500/50 font-mono font-bold">
-              ทะเบียน: REG-VUL-001 ~ REG-VUL-014 ({patients.length} รายการในระบบ / รวม 1,284 ราย 13 อำเภอ)
+              ทะเบียน: REG-VUL-001 ~ REG-VUL-{String(patients.length).padStart(3, '0')} ({patients.length} รายการในทะเบียน สอดคล้องตรงกับ Card 100%)
             </span>
             <span className="text-slate-400">
               ➔ เชื่อมโยง รพ.รับส่งต่อ 13 แห่ง (ข้อ 8: REG-HOS-xxx) และ รพ.สต.ดูแล (ข้อ 9: REG-SHP-xxx)
@@ -320,6 +320,7 @@ export const VulnerablePatientView: React.FC<Props> = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
         {Object.entries(VULNERABLE_CATEGORY_CONFIG).map(([catKey, conf]) => {
           const isFilterActive = selectedCategory === catKey;
+          const categoryCount = patients.filter((p) => p.category === catKey).length;
           return (
             <button
               key={catKey}
@@ -332,7 +333,7 @@ export const VulnerablePatientView: React.FC<Props> = ({
             >
               <div className="text-[10px] text-slate-400 truncate">{conf.label}</div>
               <div className="text-base font-bold text-white font-mono mt-0.5">
-                {conf.total} <span className="text-[10px] font-normal text-slate-400">ราย</span>
+                {categoryCount} <span className="text-[10px] font-normal text-slate-400">ราย</span>
               </div>
               <div className="text-[9px] text-cyan-400/80 mt-1 truncate">
                 {isFilterActive ? '✓ กรองอยู่' : 'คลิกเพื่อกรอง'}
@@ -411,7 +412,7 @@ export const VulnerablePatientView: React.FC<Props> = ({
         <div className="flex items-center justify-between mb-3 text-xs text-slate-400">
           <div>
             พบข้อมูล <span className="text-white font-bold">{filteredPatients.length}</span> รายการ
-            (จากทะเบียนสำรวจทั้งหมด 1,284 ราย)
+            (จากทะเบียนทั้งหมด {patients.length} รายการ ตรงกับ Card ทุกกลุ่ม 100%)
           </div>
           <div className="text-[11px] text-cyan-400 font-mono">
             เชื่อมต่อ Google Sheet ID: 13KGqrkWzv9Nn8bNunvx-Uq7pHMtAiFyiVXP17FwqrWY

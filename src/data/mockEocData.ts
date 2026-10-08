@@ -7,6 +7,10 @@ import {
   CommunicationLayer,
   ReplenishmentPlan,
   LiveWeatherData,
+  ShphItem,
+  StaffTeamItem,
+  BcpResourceItem,
+  ReferralRouteItem,
 } from '../types/dashboard';
 
 export const INITIAL_DISTRICTS: DistrictRisk[] = [
@@ -610,43 +614,43 @@ export const VULNERABLE_CATEGORY_CONFIG = {
   pregnant_risk: {
     label: 'หญิงตั้งครรภ์เสี่ยงสูง / ใกล้คลอด',
     color: 'border-pink-500/50 bg-pink-500/10 text-pink-300',
-    total: 248,
+    total: 3,
     action: 'EVAC ก่อน 48 ชม. ไปยัง รพ.หลักที่มี LR/OR',
   },
   dialysis: {
     label: 'ผู้ป่วยฟอกไต (Dialysis)',
     color: 'border-red-500/50 bg-red-500/10 text-red-300',
-    total: 164,
+    total: 2,
     action: 'ส่งต่อรอบฟอกไตล่วงหน้า หรือย้าย รพ. เครือข่าย',
   },
   home_o2: {
     label: 'Home O2 / ใช้เครื่องช่วยหายใจ (Ventilator)',
     color: 'border-cyan-500/50 bg-cyan-500/10 text-cyan-300',
-    total: 137,
+    total: 2,
     action: 'สำรองถังออกซิเจน + แบตเตอรี่สำรอง / ย้ายเข้า รพ.',
   },
   bedridden: {
     label: 'ผู้ป่วยติดเตียง / พึ่งพาอุปกรณ์',
     color: 'border-amber-500/50 bg-amber-500/10 text-amber-300',
-    total: 386,
+    total: 2,
     action: 'ทีม EMS/กู้ภัย ย้ายไปศูนย์พักพิงเฉพาะทาง',
   },
   critical_med: {
     label: 'ผู้ป่วยที่ขาดยาไม่ได้ (NCDs รุนแรง/โรคหัวใจ)',
     color: 'border-purple-500/50 bg-purple-500/10 text-purple-300',
-    total: 184,
+    total: 2,
     action: 'อสม./รพ.สต. จ่ายยาสำรองล่วงหน้า 30 วัน',
   },
   smi_psych: {
     label: 'SMI / จิตเวชรุนแรง',
     color: 'border-indigo-500/50 bg-indigo-500/10 text-indigo-300',
-    total: 94,
+    total: 1,
     action: 'ติดตามการกินยา และจัดเจ้าหน้าที่ดูแลความปลอดภัย',
   },
   palliative: {
     label: 'Palliative Care / Device-dependent',
     color: 'border-rose-500/50 bg-rose-500/10 text-rose-300',
-    total: 71,
+    total: 2,
     action: 'ประสานแพทย์เจ้าของไข้ วางแผนการดูแลประคับประคอง',
   },
 };

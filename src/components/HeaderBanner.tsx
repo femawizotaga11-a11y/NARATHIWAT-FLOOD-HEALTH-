@@ -27,6 +27,7 @@ interface Props {
   sheetConnected: boolean;
   fontSize: FontSizeLevel;
   onChangeFontSize: (size: FontSizeLevel) => void;
+  vulnerableCount?: number;
   autoSyncEnabled?: boolean;
   autoSyncSeconds?: number;
   countdownSeconds?: number;
@@ -45,6 +46,7 @@ export const HeaderBanner: React.FC<Props> = ({
   sheetConnected,
   fontSize,
   onChangeFontSize,
+  vulnerableCount = 14,
   autoSyncEnabled = true,
   autoSyncSeconds = 60,
   countdownSeconds = 60,
@@ -398,11 +400,11 @@ export const HeaderBanner: React.FC<Props> = ({
               <span className="font-medium text-slate-300">ผู้ป่วยเปราะบาง</span>
               <Users className="w-3.5 h-3.5 text-cyan-400" />
             </div>
-            <div className="text-lg font-bold text-cyan-300 tracking-tight">
-              1,284 <span className="text-xs font-normal text-slate-400">ราย</span>
+            <div className="text-lg font-bold text-cyan-300 tracking-tight font-mono">
+              {vulnerableCount} <span className="text-xs font-normal text-slate-400">ราย</span>
             </div>
             <div className="text-[10px] text-cyan-400/90 truncate">
-              (ต้องดูแลเป็นพิเศษ/EVAC)
+              (ในทะเบียนกลุ่มเปราะบาง/EVAC)
             </div>
           </div>
 

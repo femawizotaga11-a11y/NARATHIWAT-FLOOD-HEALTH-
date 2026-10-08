@@ -625,6 +625,7 @@ export default function App() {
         sheetConnected={Boolean(sheetConfig.sheetId)}
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
+        vulnerableCount={patients.length}
         autoSyncEnabled={autoSyncEnabled}
         autoSyncSeconds={autoSyncIntervalSeconds}
         countdownSeconds={countdownSeconds}
