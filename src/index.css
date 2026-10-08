@@ -50,14 +50,14 @@ html.font-size-xl {
 }
 
 ::-webkit-scrollbar-track {
-  background: #020617;
+  background: #041c14;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #065f46;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #10b981;
 }

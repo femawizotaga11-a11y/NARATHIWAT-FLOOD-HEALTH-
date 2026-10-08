@@ -606,12 +606,16 @@ export default function App() {
     (h) => h.autonomyHours <= 36 || h.riskLevel === 'critical' || h.riskLevel === 'high'
   ).length;
 
+  const shphRiskCount = shphList.filter(
+    (s) => s.status === 'เสี่ยง' || s.status === 'เฝ้าระวัง' || s.status === 'ปิดบริการ' || s.riskLevel === 'แดง' || s.riskLevel === 'ส้ม'
+  ).length;
+
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
+    <div className="flex flex-col h-screen w-screen bg-[#041c14] text-slate-100 overflow-hidden font-sans">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-16 right-6 z-[9999] bg-slate-900 border border-cyan-500/80 text-cyan-200 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-semibold flex items-center gap-2 animate-bounce">
-          <span className="w-2 h-2 rounded-full bg-cyan-400" />
+        <div className="fixed top-16 right-6 z-[9999] bg-[#022419] border border-emerald-400 text-emerald-100 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-semibold flex items-center gap-2 animate-bounce">
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -626,6 +630,10 @@ export default function App() {
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
         vulnerableCount={patients.length}
+        criticalHospCount={criticalHospCount}
+        hospitalCount={hospitals.length}
+        shphRiskCount={shphRiskCount}
+        shphCount={shphList.length}
         autoSyncEnabled={autoSyncEnabled}
         autoSyncSeconds={autoSyncIntervalSeconds}
         countdownSeconds={countdownSeconds}
@@ -661,7 +669,7 @@ export default function App() {
         />
 
         {/* Right Active View Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-slate-950/95 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-slate-950">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-[#021710]/95 scrollbar-thin scrollbar-thumb-emerald-800 scrollbar-track-[#02150e]">
           <div className="max-w-7xl mx-auto pb-12">
             {/* Overview Master */}
             {activeTab === 'overview' && (

@@ -187,24 +187,27 @@ export const Sidebar: React.FC<Props> = ({
   ];
 
   return (
-    <aside className="w-72 shrink-0 bg-slate-900/95 border-r border-sky-800/40 flex flex-col h-full overflow-hidden text-slate-200">
+    <aside className="w-72 shrink-0 bg-[#031d14]/95 border-r border-emerald-700/50 flex flex-col h-full overflow-hidden text-slate-200">
       {/* Sidebar Header Title */}
-      <div className="p-4 border-b border-sky-800/40 bg-slate-950/60">
+      <div className="p-4 border-b border-emerald-700/50 bg-[#021710]">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-sky-400">
-            สารบัญระบบ EOC นราธิวาส
-          </span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-900/60 border border-sky-700/50 text-sky-300 font-mono">
-            10 ข้อกำหนดครบ
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+              สารบัญระบบ EOC สธ. นราธิวาส
+            </span>
+          </div>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/60 text-emerald-200 font-mono font-semibold">
+            10 ข้อกำหนด สธ.
           </span>
         </div>
       </div>
 
       {/* Nav List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-5 text-xs scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+      <div className="flex-1 overflow-y-auto p-3 space-y-5 text-xs scrollbar-thin scrollbar-thumb-emerald-800 scrollbar-track-[#021710]">
         {navSections.map((sect, sIdx) => (
           <div key={sIdx} className="space-y-1">
-            <div className="px-2 pb-1 text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+            <div className="px-2 pb-1 text-[10px] font-bold tracking-wider text-emerald-300/80 uppercase">
               {sect.group}
             </div>
             {sect.items.map((item) => {
@@ -216,27 +219,27 @@ export const Sidebar: React.FC<Props> = ({
                   onClick={() => onSelectTab(item.id)}
                   className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center justify-between group border ${
                     isActive
-                      ? 'bg-gradient-to-r from-sky-900/90 to-blue-900/70 border-cyan-400/60 text-white shadow-md shadow-sky-950/50'
-                      : 'hover:bg-slate-800/70 text-slate-300 hover:text-white border-transparent'
+                      ? 'bg-gradient-to-r from-emerald-800 via-teal-800/90 to-emerald-900 border-emerald-400 text-white shadow-md shadow-emerald-950/70'
+                      : 'hover:bg-[#072f22] text-emerald-100/90 hover:text-white border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0 pr-1">
                     <div
                       className={`p-1.5 rounded-md ${
                         isActive
-                          ? 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-400/40'
-                          : 'bg-slate-800 text-slate-400 group-hover:text-cyan-300'
+                          ? 'bg-emerald-500/30 text-emerald-200 ring-1 ring-emerald-300'
+                          : 'bg-[#052b1e] text-emerald-400 group-hover:text-emerald-200'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <div className="font-medium text-xs truncate leading-snug">
+                      <div className="font-semibold text-xs truncate leading-snug">
                         {item.label}
                       </div>
                       <div
                         className={`text-[10px] truncate ${
-                          isActive ? 'text-cyan-200/80' : 'text-slate-400'
+                          isActive ? 'text-emerald-200 font-normal' : 'text-slate-400'
                         }`}
                       >
                         {item.subLabel}
@@ -259,17 +262,17 @@ export const Sidebar: React.FC<Props> = ({
       </div>
 
       {/* Sidebar Footer Info */}
-      <div className="p-3 border-t border-sky-800/40 bg-slate-950/80 text-[11px] text-slate-400 space-y-1.5">
+      <div className="p-3 border-t border-emerald-800/50 bg-[#02150e]/90 text-[11px] text-emerald-300/80 space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-slate-300">
+          <span className="flex items-center gap-1.5 text-emerald-200">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>War Room สสจ.</span>
+            <span className="font-medium">War Room สธ. นราธิวาส</span>
           </span>
-          <span className="font-mono text-cyan-400">073-511124</span>
+          <span className="font-mono text-emerald-300 font-bold">073-511124</span>
         </div>
         <div className="text-[10px] text-slate-400 flex items-center justify-between">
           <span>สายด่วนการแพทย์ฉุกเฉิน</span>
-          <span className="font-bold text-rose-400 font-mono">1669</span>
+          <span className="font-black text-rose-400 font-mono text-xs">1669</span>
         </div>
       </div>
     </aside>

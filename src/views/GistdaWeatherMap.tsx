@@ -41,30 +41,30 @@ export const GistdaWeatherMap: React.FC<Props> = ({
   return (
     <div className="space-y-5">
       {/* Official Header Badge */}
-      <div className="bg-slate-900/90 border border-sky-800/40 rounded-xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-[#032419]/90 border border-emerald-600/50 rounded-xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold">
-              ข้อ 1
+            <span className="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/50 text-emerald-200 font-mono text-xs font-bold">
+              ข้อ 1 (สธ.)
             </span>
             <h2 className="text-base font-bold text-white">
               แผนที่เสี่ยงอุทกภัยจาก GISTDA และ ปภ. (GISTDA Disaster Platform / ThaiWater)
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-emerald-200/80 mt-0.5">
             บูรณาการข้อมูลภาพถ่ายดาวเทียมตรวจจับพื้นที่น้ำท่วมขัง (SAR Satellite), เซ็นเซอร์ระดับน้ำลุ่มน้ำหลัก และข้อมูลเรดาร์ฝนกรมอุตุนิยมวิทยา
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 flex items-center gap-1.5 font-mono">
-            <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span>อัปเดต: {weather.updatedTime}</span>
+          <span className="text-xs text-emerald-200 bg-[#021c13] px-3 py-1.5 rounded-lg border border-emerald-700/60 flex items-center gap-1.5 font-mono shadow-sm">
+            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span>ล่าสุด อัปเดต: 17:43 น. (Live Telemetry)</span>
           </span>
           <button
             onClick={onRefreshWeather}
             disabled={isLoading}
-            className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold shadow transition"
+            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow transition"
           >
             {isLoading ? 'กำลังดึงสด...' : 'รีเฟรชข้อมูลสด'}
           </button>
